@@ -86,7 +86,7 @@ def car_sizes(grid):
                 car_dict[cell] = (size + 1, fuel, orientation)
                 continue
             orientation = get_orientation(cell, r, c, grid)
-            car_dict[cell] = (1, 100, orientation) # size, fuel, oritentation ('v', 'h')
+            car_dict[cell] = (1, 100, get_orientation(cell, r, c, grid)) # size, fuel, oritentation ('v', 'h')
     return car_dict
 
 # Get matrix representation of board and list of fuel levels
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     # Print the grid to console and its fuel levels
     case = 0
     for fuel, grid in zip(fuel_list, grid_list):
-        output_grid_console(fuel, grid, case)
+        # output_grid_console(fuel, grid, case)
         case += 1
 
     # output TODO
