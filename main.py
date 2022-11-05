@@ -56,6 +56,8 @@ def determine_all_fuel_levels(fuel, car_dict):
     for car in car_dict:
         if car in fuel_dict:
             ret.append(f'{car}:{fuel_dict[car]}')
+            letter, amount = car_dict[car]
+            car_dict[car] = (letter, int(fuel_dict[car]))
         ret.append(f'{car}:100')
     
     return ret
@@ -80,10 +82,10 @@ def car_sizes(grid):
             if cell == '.':
                 continue
             elif cell in car_dict:
-                car_dict[cell] += 1
+                size, fuel = car_dict[cell]
+                car_dict[cell] = (size + 1, fuel)
                 continue
-            
-            car_dict[cell] = 1
+            car_dict[cell] = (1, 100)
     return car_dict
 
 # Get matrix representation of board and list of fuel levels
@@ -146,8 +148,6 @@ if __name__ == '__main__':
     for fuel, grid in zip(fuel_list, grid_list):
         output_grid_console(fuel, grid, case)
         case += 1
-
-
 
     # output TODO
     # For each grid:
