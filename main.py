@@ -70,26 +70,122 @@ if __name__ == '__main__':
     has_fuel_limitations = len(test_cases[0]) > 1
     print("Fuel limitations!" if has_fuel_limitations else "No fuel limitations")
     
-    prev_car = ''
-    for current_car in test_cases[0][0]:
-        # Determine next moves
-        print(current_car)
+    # prev_car = ''
+    # for current_car in test_cases[0][0]:
+    #     # Determine next moves
+    #     print(current_car)
 
-        # Moveable in 
-        if prev_car == current_car:
-            print("Check right moves")
-        else:
-            prev_car = current_car
+    #     # Moveable in 
+    #     if prev_car == current_car:
+    #         print("Check right moves")
+    #     else:
+    #         prev_car = current_car
         
         
     # Greedy Best-First Search
     # - Add nodes to open list sorted with ascending h(n)
     # - Choose next node with the best h(n)
 
+    puzzle = test_cases[0][0]
+    print(puzzle)
+
+    def quick_puzzle():
+        for i in range(6, 36, 6):
+            print(puzzle[i-6:i])
 
     # Heuristic 1: Number of blocking vehicles
-    def gbfs_h1():
-        return 
+    def h1(puzzle):
+        # Count blocking cars in front of ambulance
+        blocking_count = 0
+        prev_vehicle = ''
+        ambulance_passed = False
+
+        # Define and search third row 
+        end_row = int(WIDTH * HEIGHT/2)
+        start_row = int(end_row - WIDTH)
+        for i in range(start_row, end_row):
+            car = puzzle[i]
+            if car == 'A':
+                ambulance_passed = True
+            # Count blocking car if ambulance passed, car is present, and car not already counted
+            elif ambulance_passed and car != '.' and car != prev_vehicle:
+                blocking_count += 1
+                prev_vehicle = car
+        
+        return blocking_count
+    
+    # Heuristic 2: Number of blocked positions
+    def h2(puzzle):
+        # Count blocking cars in front of ambulance
+        blocking_pos = 0
+        ambulance_passed = False
+
+        # Define and search third row 
+        end_row = int(WIDTH * HEIGHT/2)
+        start_row = int(end_row - WIDTH)
+        for i in range(start_row, end_row):
+            car = puzzle[i]
+            if car == 'A':
+                ambulance_passed = True
+            # Count blocking positions if ambulance passed and car is present
+            elif ambulance_passed and car != '.':
+                blocking_pos += 1
+        
+        return blocking_pos
+
+    # Heuristic 3: Multiplied h1 with lambda
+    LAMBDA = 2.5
+    def h3(puzzle):
+        return h1(puzzle) * LAMBDA
+
+    # Heuristic 4: Number of blocking vehicles plus minimum number of own blocking vehicles
+    # - Estimate minimum number of moves to unblock the block vehicles and clear out the solution path by calculating minimum number of vehicles blocking the blocking vehicles
+    def h4(puzzle):
+        # Count blocking cars in front of ambulance
+        blocking_count = 0
+    
+        prev_vehicle = ''
+        prev_block_up, prev_block_down = 0, 0
+        min_unblock_count = 0
+        ambulance_passed = False
+
+        # Define and search third row 
+        start_third_ind = int(WIDTH * HEIGHT/2 - WIDTH)
+        for i in range(0, WIDTH):
+            car = puzzle[start_third_ind + i]
+            if car == 'A':
+                ambulance_passed = True
+            # Count blocking car if ambulance passed and car is present
+            elif ambulance_passed and car != '.':
+                if prev_vehicle != car:
+                    blocking_count += 1
+                
+                # Search vertically for blocking cars 
+                # TODO: Check orientation of car and only add blocking if vertically oriented
+                prev_vehicle = car
+                j = start_third_ind + i
+                while j - WIDTH > 0:
+                    j -= WIDTH
+                    up_car = puzzle[j]
+                    if up_car != prev_vehicle:
+                        prev_block_up += 1
+                        prev_vehicle = up_car
+                
+                prev_vehicle = car
+                j = start_third_ind + i
+                while j + WIDTH < WIDTH*HEIGHT:
+                    j += WIDTH
+                    down_car = puzzle[j]
+                    if down_car != prev_vehicle:
+                        prev_block_down += 1
+                        prev_vehicle = down_car
+                
+                blocking_count += min(prev_block_up, prev_block_down)
+                prev_vehicle = car
+                prev_block_down = prev_block_up = 0
+
+
+        return blocking_count
 
     # Only move in X or Y
     # Slide into free position
