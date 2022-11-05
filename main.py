@@ -18,7 +18,7 @@ def format_solution(initial_board, method, id, final_board):
     final_grid, final_fuel, car_dict = get_grid_and_fuel(final_board)
 
     initial_fuel = ', '.join(initial_fuel)
-    final_fuel = ', '.join(final_fuel)
+    final_fuel = ' '.join(final_fuel).replace(':','')
 
     with open(output_file, 'w') as file:
         file.write(f'Initial board configuration: {board}\n\n')
@@ -29,8 +29,8 @@ def format_solution(initial_board, method, id, final_board):
         file.write(f'Solution path length: {0}\n') # todo get solution path length
         file.write(f'Solution path: {0}\n\n') # todo get solution path
         file.writelines(format_solution_path('')) # todo pass solution path
-        file.writelines(f'\n\n{output_file_grid(final_grid)}') # todo pass final grid
-        file.write(f'\nCar fuel final: {final_fuel}\n\n')
+        file.write(f'\n\n! {final_fuel}\n\n')
+        file.writelines(f'{output_file_grid(final_grid)}') # todo pass final grid
 
 def determine_all_cars():
     return
