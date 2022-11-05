@@ -53,14 +53,54 @@ if __name__ == '__main__':
         # create the grid
         fuels.append(test_case[1:])
 
-        print(test_case[0])
+        # print(test_case[0])
 
         # create the grid
         grid = [[test_case[0][i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
         grid_list.append(grid)
 
-    format_grid(fuels, grid_list)
-    print(fuels)
+    # format_grid(fuels, grid_list)
+    # print(fuels)
+
+
+    # Greedy Best-First Search
+    # - Add nodes to open list sorted with ascending h(n)
+    # - Choose next node with the best h(n)
+    
+    has_fuel_limitations = len(test_cases[0]) > 1
+    print("Fuel limitations!" if has_fuel_limitations else "No fuel limitations")
+    
+    prev_car = ''
+    for current_car in test_cases[0][0]:
+        # Determine next moves
+        print(current_car)
+
+        # Moveable in 
+        if prev_car == current_car:
+            print("Check right moves")
+        else:
+            prev_car = current_car
+        
+        
+    # Greedy Best-First Search
+    # - Add nodes to open list sorted with ascending h(n)
+    # - Choose next node with the best h(n)
+
+
+    # Heuristic 1: Number of blocking vehicles
+    def gbfs_h1():
+        return 
+
+    # Only move in X or Y
+    # Slide into free position
+    # Move vehicle has same cost in all directions, irrespective of distance moved
+    # A A respresents the ambulance
+    # Each vehicle has fuel, number of positions it can move
+    # Reaching 3f will take the vehicle out of the board (goal: AA reach 3f)
+
+    # From start position, determine next moves
+
+
 
     # output TODO
     # For each grid:
