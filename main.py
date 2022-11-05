@@ -56,8 +56,8 @@ def determine_all_fuel_levels(fuel, car_dict):
     for car in car_dict:
         if car in fuel_dict:
             ret.append(f'{car}:{fuel_dict[car]}')
-            letter, amount = car_dict[car]
-            car_dict[car] = (letter, int(fuel_dict[car]))
+            letter, amount, orientation = car_dict[car]
+            car_dict[car] = (letter, int(fuel_dict[car]), orientation)
         ret.append(f'{car}:100')
     
     return ret
@@ -76,24 +76,25 @@ def output_file_grid(grid):
 # get a dict of all the cars and their sizes
 def car_sizes(grid):
     car_dict = {}
-    for row in grid:
-        for cell in row:
+    for r, row in enumerate(grid):
+        for c, cell in enumerate(row):
             cell = cell.strip()
             if cell == '.':
                 continue
             elif cell in car_dict:
-                size, fuel = car_dict[cell]
-                car_dict[cell] = (size + 1, fuel)
+                size, fuel, orientation = car_dict[cell]
+                car_dict[cell] = (size + 1, fuel, orientation)
                 continue
-            car_dict[cell] = (1, 100)
+            orientation = get_orientation(cell, r, c, grid)
+            car_dict[cell] = (1, 100, orientation) # size, fuel, oritentation ('v', 'h')
     return car_dict
 
 # Get matrix representation of board and list of fuel levels
 def get_grid_and_fuel(test_case):
     # create the grid
-    grid =  [[test_case[0][i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
+    grid = [[test_case[0][i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
 
-    # # determine all cars and their occurences
+    # # determine all cars and their occurences and orientation
     car_dict = car_sizes(grid)
 
     # create the fuel levels
@@ -107,6 +108,30 @@ def output_grid_console(fuel, grid, case):
     print(f'Case {case}: {flevels}')
     for row in grid:
         print(row)
+
+def get_orientation(car, row, col, grid):
+    orientation = 'h'
+    if row + 1 < HEIGHT and grid[row + 1][col] == car:
+        orientation = 'v'
+    elif row - 1 >= 0 and grid[row - 1][col] == car:
+        orientation = 'v'
+    return orientation
+
+def uniform_cost_search(goal, start):
+    unf_cost = 1 # for up, down, left, right
+
+    # if any car reachers indexes: (.... [2][4], [2][5]) then it is removed from the grid and replaced with '.'
+    # goal: when ['A', 'A'] is in position [2][4] and [2][5] then this is the goal state, we have finished 
+    # the search and can return the path taken to get to this state, and its cost, and the total search path
+
+    # check if car has fuel remaining
+    if car in car_dict:
+        size, fuel = car_dict[car]
+        if fuel == 0:
+            # cant move this car
+            ret = false
+
+    return
 
 if __name__ == '__main__':
     # parse through the arguments
@@ -138,8 +163,9 @@ if __name__ == '__main__':
         fuel_list.append(fuel)
         grid_list.append(grid)
         car_dict_list.append(car_dict)
-        # todo run algorithms
 
+        # todo run algorithms
+        print(grid)
         # todo optimize this
         format_solution(test_case, 'test', i+1, test_case)
 
@@ -154,21 +180,6 @@ if __name__ == '__main__':
     #   For each search algorithm (UCS, GBFS, A*):
         # output to two paths: the solution and the search
         # for GBFS and A*: have each heuristic in a separate file
-    
-    # solution output file:
-        #Initial board
-        # board format
-
-        # lsit of fuel levels
-
-        # runtime
-        # search path length
-        #solution path moves
-        # solution path
-        # solution path breakdown, ex: A down 1 new_fuel_lvl  updated_grid car_fuel_lvl
-
-        # final fuel levels
-        # final board
 
     # search output file:
         # f(n) = ? g(n) = ? h(n) = ?, state = new board state
