@@ -1,29 +1,102 @@
 # imports
-import numpy as np
-# import pandas as pd
 import argparse
-import json
+import os
+from Puzzle import Puzzle
 
 INPUT_FILE_PATH = 'input'
 SOLUTIONS_PATH = 'output/solutions'
 SEARCH_PATH = 'output/search'
-
 HEIGHT = WIDTH = 6
 
-
-def format_solution(initial_board, runtime, search_path, solution_path_length, solution_path, method, id):
-    board = ' '.join(initial_board)
+# def format_solution(initial_board, runtime, search_path, solution_path_length, solution_path, method, id):
+def write_solution_file(board, initial_fuel, method, id, final_board):
     output_file = f'{SOLUTIONS_PATH}/{method}-sol-{id}.txt'
+    if not os.path.exists(SOLUTIONS_PATH):
+        os.makedirs(SOLUTIONS_PATH)
+
+    final_fuel = ', '.join(initial_fuel).replace(':','')
+    initial_fuel = ', '.join(initial_fuel)
+
     with open(output_file, 'w') as file:
-        file.write(f'Initial board oncfiguration: {board}')
+        file.write(f'Initial board configuration: {board}\n\n')
+        file.writelines(output_file_board(board))
+        file.write(f'\nCar fuel available: {initial_fuel}\n\n')
+        file.write(f'Runtime: {0}\n') # todo get runtime val
+        file.write(f'Search path length: {0}\n') # todo get search path length
+        file.write(f'Solution path length: {0}\n') # todo get solution path length
+        file.write(f'Solution path: {0}\n\n') # todo get solution path
+        file.writelines(format_solution_path('')) # todo pass solution path
+        file.write(f'\n\n! {final_fuel}\n\n')
+        file.writelines(f'{output_file_board(final_board)}') # todo pass final grid
+
+def write_search_file():
     return
 
-def format_grid(fuels, grid):
-    for i, grid in enumerate(grid_list):
-        flevels = f'Fuel levels for: {fuels[i]}' if len(fuels[i]) else 'All fuel levels 100'
-        print(f'Case {i}: {flevels}')
-        for row in grid:
-            print(row)
+# for outputing to output files
+def format_solution_path(solution_path):
+    return ''
+
+# for outputing to output file
+def output_file_board(board):
+    ret = ''
+
+    for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
+        ret += ' '.join(board[i-WIDTH:i]) + '\n'
+    return ret
+
+# get a dict of all the cars and their sizes
+def get_car_dict(board, fuel_list):
+    car_dict = {}
+
+    for i, car in enumerate(board):
+        if car == '.':
+            continue
+        elif car in car_dict:
+            size, fuel, orientation = car_dict[car]
+            car_dict[car] = (size + 1, fuel, orientation)
+            continue
+        car_dict[car] = (1, get_fuel(car, fuel_list), get_orientation(car, i, board))
+    return car_dict
+
+def get_fuel(car, fuel_list):
+    for fuel in fuel_list:
+        if car == fuel[0]:
+            return int(fuel[1])
+    return 100
+
+def get_orientation(car, index, grid):
+    orientation = 'v'
+    if index % WIDTH == 0 and grid[index + 1] == car:
+        orientation = 'h'
+    elif index % WIDTH == WIDTH - 1 and grid[index - 1] == car:
+        orientation = 'h'
+    elif grid[index - 1] == car or grid[index + 1] == car:
+        orientation = 'h' 
+
+    return orientation
+
+# for outputing to console
+def output_board_console(fuel, grid, case):
+    flevels = f'Fuel levels for: {fuel}'
+    print(f'Case {case}: {flevels}')
+    for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
+        print(' '.join(grid[i-WIDTH:i]))
+
+def uniform_cost_search(goal, start):
+    unf_cost = 1 # for up, down, left, right
+
+    # if any car reachers indexes: (.... [2][4], [2][5]) then it is removed from the grid and replaced with '.'
+    # goal: when ['A', 'A'] is in position [2][4] and [2][5] then this is the goal state, we have finished 
+    # the search and can return the path taken to get to this state, and its cost, and the total search path
+
+    # check if car has fuel remaining
+    if car in car_dict:
+        size, fuel = car_dict[car]
+        if fuel == 0:
+            # cant move this car
+            ret = false
+
+    return
 
 if __name__ == '__main__':
     # parse through the arguments
@@ -34,7 +107,6 @@ if __name__ == '__main__':
     input_file = f'{INPUT_FILE_PATH}/{args.file}'
     
     test_cases = []
-
     # read the file
     with open(input_file, 'r') as file:
         for line in file.readlines():
@@ -42,150 +114,33 @@ if __name__ == '__main__':
 
             if tokens[0] == '#' or tokens[0] == '':
                 continue
-            
             test_cases.append(tokens)
 
+    puzzle_list = []
     # process the test cases
-    fuels = []
-    grid_list = []
+    for test_case in test_cases:
+        board = test_case[0]
+        car_dict = get_car_dict(board, test_case[1:])
 
-    for i, test_case in enumerate(test_cases):
-        # create the grid
-        fuels.append(test_case[1:])
+        puzzle_list.append(Puzzle(board, test_case, car_dict))
 
-        # print(test_case[0])
+    # output TODO
+    # For each grid:
+    #   For each search algorithm (UCS, GBFS, A*):
+        # output to two paths: the solution and the search
+        # for GBFS and A*: have each heuristic in a separate file
 
-        # create the grid
-        grid = [[test_case[0][i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
-        grid_list.append(grid)
+    # search output file:
+        # f(n) = ? g(n) = ? h(n) = ?, state = new board state
 
-    # format_grid(fuels, grid_list)
-    # print(fuels)
+    methods = ['ucs', 'gbfs', 'astar']
+    for method in methods:
+        for num, puzzle in enumerate(puzzle_list):
+            fuel_levels = []
+            for car in puzzle.car_dict:
+                fuel_levels.append(f'{car}: {puzzle.car_dict[car][1]}')
+            write_solution_file(puzzle.board, fuel_levels, method, (num + 1), puzzle.board)
 
-
-    # Greedy Best-First Search
-    # - Add nodes to open list sorted with ascending h(n)
-    # - Choose next node with the best h(n)
-    
-    has_fuel_limitations = len(test_cases[0]) > 1
-    print("Fuel limitations!" if has_fuel_limitations else "No fuel limitations")
-    
-    # prev_car = ''
-    # for current_car in test_cases[0][0]:
-    #     # Determine next moves
-    #     print(current_car)
-
-    #     # Moveable in 
-    #     if prev_car == current_car:
-    #         print("Check right moves")
-    #     else:
-    #         prev_car = current_car
-        
-        
-    # Greedy Best-First Search
-    # - Add nodes to open list sorted with ascending h(n)
-    # - Choose next node with the best h(n)
-
-    puzzle = test_cases[0][0]
-    print(puzzle)
-
-    def quick_puzzle():
-        for i in range(6, 36, 6):
-            print(puzzle[i-6:i])
-
-    # Heuristic 1: Number of blocking vehicles
-    def h1(puzzle):
-        # Count blocking cars in front of ambulance
-        blocking_count = 0
-        prev_vehicle = ''
-        ambulance_passed = False
-
-        # Define and search third row 
-        end_row = int(WIDTH * HEIGHT/2)
-        start_row = int(end_row - WIDTH)
-        for i in range(start_row, end_row):
-            car = puzzle[i]
-            if car == 'A':
-                ambulance_passed = True
-            # Count blocking car if ambulance passed, car is present, and car not already counted
-            elif ambulance_passed and car != '.' and car != prev_vehicle:
-                blocking_count += 1
-                prev_vehicle = car
-        
-        return blocking_count
-    
-    # Heuristic 2: Number of blocked positions
-    def h2(puzzle):
-        # Count blocking cars in front of ambulance
-        blocking_pos = 0
-        ambulance_passed = False
-
-        # Define and search third row 
-        end_row = int(WIDTH * HEIGHT/2)
-        start_row = int(end_row - WIDTH)
-        for i in range(start_row, end_row):
-            car = puzzle[i]
-            if car == 'A':
-                ambulance_passed = True
-            # Count blocking positions if ambulance passed and car is present
-            elif ambulance_passed and car != '.':
-                blocking_pos += 1
-        
-        return blocking_pos
-
-    # Heuristic 3: Multiplied h1 with lambda
-    LAMBDA = 2.5
-    def h3(puzzle):
-        return h1(puzzle) * LAMBDA
-
-    # Heuristic 4: Number of blocking vehicles plus minimum number of own blocking vehicles
-    # - Estimate minimum number of moves to unblock the block vehicles and clear out the solution path by calculating minimum number of vehicles blocking the blocking vehicles
-    def h4(puzzle):
-        # Count blocking cars in front of ambulance
-        blocking_count = 0
-    
-        prev_vehicle = ''
-        prev_block_up, prev_block_down = 0, 0
-        min_unblock_count = 0
-        ambulance_passed = False
-
-        # Define and search third row 
-        start_third_ind = int(WIDTH * HEIGHT/2 - WIDTH)
-        for i in range(0, WIDTH):
-            car = puzzle[start_third_ind + i]
-            if car == 'A':
-                ambulance_passed = True
-            # Count blocking car if ambulance passed and car is present
-            elif ambulance_passed and car != '.':
-                if prev_vehicle != car:
-                    blocking_count += 1
-                
-                # Search vertically for blocking cars 
-                # TODO: Check orientation of car and only add blocking if vertically oriented
-                prev_vehicle = car
-                j = start_third_ind + i
-                while j - WIDTH > 0:
-                    j -= WIDTH
-                    up_car = puzzle[j]
-                    if up_car != prev_vehicle:
-                        prev_block_up += 1
-                        prev_vehicle = up_car
-                
-                prev_vehicle = car
-                j = start_third_ind + i
-                while j + WIDTH < WIDTH*HEIGHT:
-                    j += WIDTH
-                    down_car = puzzle[j]
-                    if down_car != prev_vehicle:
-                        prev_block_down += 1
-                        prev_vehicle = down_car
-                
-                blocking_count += min(prev_block_up, prev_block_down)
-                prev_vehicle = car
-                prev_block_down = prev_block_up = 0
-
-
-        return blocking_count
 
     # Only move in X or Y
     # Slide into free position
@@ -195,30 +150,3 @@ if __name__ == '__main__':
     # Reaching 3f will take the vehicle out of the board (goal: AA reach 3f)
 
     # From start position, determine next moves
-
-
-
-    # output TODO
-    # For each grid:
-    #   For each search algorithm (UCS, GBFS, A*):
-        # output to two paths: the solution and the search
-        # for GBFS and A*: have each heuristic in a separate file
-    
-    # solution output file:
-        #Initial board
-        # board format
-
-        # lsit of fuel levels
-
-        # runtime
-        # search path length
-        #solution path moves
-        # solution path
-        # solution path breakdown, ex: A down 1 new_fuel_lvl  updated_grid car_fuel_lvl
-
-        # final fuel levels
-        # final board
-
-    # search output file:
-        # f(n) = ? g(n) = ? h(n) = ?, state = new board state
-
