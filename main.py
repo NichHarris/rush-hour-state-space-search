@@ -8,21 +8,17 @@ SEARCH_PATH = 'output/search'
 HEIGHT = WIDTH = 6
 
 # def format_solution(initial_board, runtime, search_path, solution_path_length, solution_path, method, id):
-def format_solution(initial_board, method, id, final_board):
-    board = ' '.join(initial_board)
+def format_solution(board, initial_fuel, method, id, final_board):
     output_file = f'{SOLUTIONS_PATH}/{method}-sol-{id}.txt'
     if not os.path.exists(SOLUTIONS_PATH):
         os.makedirs(SOLUTIONS_PATH)
 
-    initial_grid, initial_fuel, car_dict = get_grid_and_fuel(initial_board)
-    final_grid, final_fuel, car_dict = get_grid_and_fuel(final_board)
-
+    final_fuel = ', '.join(initial_fuel).replace(':','')
     initial_fuel = ', '.join(initial_fuel)
-    final_fuel = ' '.join(final_fuel).replace(':','')
 
     with open(output_file, 'w') as file:
         file.write(f'Initial board configuration: {board}\n\n')
-        file.writelines(output_file_grid(initial_grid))
+        file.writelines(output_file_grid(board))
         file.write(f'\nCar fuel available: {initial_fuel}\n\n')
         file.write(f'Runtime: {0}\n') # todo get runtime val
         file.write(f'Search path length: {0}\n') # todo get search path length
@@ -30,7 +26,7 @@ def format_solution(initial_board, method, id, final_board):
         file.write(f'Solution path: {0}\n\n') # todo get solution path
         file.writelines(format_solution_path('')) # todo pass solution path
         file.write(f'\n\n! {final_fuel}\n\n')
-        file.writelines(f'{output_file_grid(final_grid)}') # todo pass final grid
+        file.writelines(f'{output_file_grid(final_board)}') # todo pass final grid
 
 def determine_all_cars():
     return
@@ -65,12 +61,9 @@ def determine_all_fuel_levels(fuel, car_dict):
 # for outputing to output file
 def output_file_grid(grid):
     ret = ''
-    for row in grid:
-        nl = ' '
-        for j, col in enumerate(row):
-            if j == WIDTH - 1:
-                nl = '\n'
-            ret += f'{col}{nl}'
+
+    for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
+        ret += ' '.join(grid[i-WIDTH:i]) + '\n'
     return ret
 
 # get a dict of all the cars and their sizes
@@ -101,10 +94,11 @@ def get_grid_and_fuel(test_case):
 
 # for outputing to console
 def output_grid_console(fuel, grid, case):
-    flevels = f'Fuel levels for: {fuel}' if len(fuel) else 'All fuel levels 100'
+    flevels = f'Fuel levels for: {fuel}'
     print(f'Case {case}: {flevels}')
-    for row in grid:
-        print(row)
+    for i in range(WIDTH, WIDTH*HEIGHT, WIDTH):
+        print(' '.join(grid[i-WIDTH:i]))
+
 
 def get_orientation(car, index, grid):
     orientation = 'v'
@@ -157,7 +151,6 @@ if __name__ == '__main__':
                 continue
             test_cases.append(tokens)
 
-    print(test_cases)
     # for outputting to console (as of right now)
     fuel_list = []
     grid_list = []
@@ -171,17 +164,13 @@ if __name__ == '__main__':
         grid_list.append(grid)
         car_dict_list.append(car_dict)
 
-    #     # todo run algorithms
-        print(grid)
-        print(car_dict)
-    #     # todo optimize this
-    #     format_solution(test_case, 'test', i+1, test_case)
+        format_solution(grid, fuel, 'test', i+1, grid)
 
     # # Print the grid to console and its fuel levels
-    # case = 0
-    # for fuel, grid in zip(fuel_list, grid_list):
-    #     # output_grid_console(fuel, grid, case)
-    #     case += 1
+    case = 0
+    for fuel, grid in zip(fuel_list, grid_list):
+        output_grid_console(fuel, grid, case)
+        case += 1
 
     # output TODO
     # For each grid:
