@@ -74,28 +74,25 @@ def output_file_grid(grid):
     return ret
 
 # get a dict of all the cars and their sizes
-def car_sizes(grid):
+def car_sizes(grid, fuel_list):
     car_dict = {}
-    for r, row in enumerate(grid):
-        for c, cell in enumerate(row):
-            cell = cell.strip()
-            if cell == '.':
-                continue
-            elif cell in car_dict:
-                size, fuel, orientation = car_dict[cell]
-                car_dict[cell] = (size + 1, fuel, orientation)
-                continue
-            orientation = get_orientation(cell, r, c, grid)
-            car_dict[cell] = (1, 100, get_orientation(cell, r, c, grid)) # size, fuel, oritentation ('v', 'h')
+
+    for i, car in enumerate(grid):
+        if car == '.':
+            continue
+        elif car in car_dict:
+            size, fuel, orientation = car_dict[car]
+            car_dict[car] = (size + 1, fuel, orientation)
+            continue
+        car_dict[car] = (1, get_fuel(car, fuel_list), get_orientation(car, i, grid))
     return car_dict
 
 # Get matrix representation of board and list of fuel levels
 def get_grid_and_fuel(test_case):
-    # create the grid
-    grid = [[test_case[0][i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
+    grid = test_case[0]
 
     # # determine all cars and their occurences and orientation
-    car_dict = car_sizes(grid)
+    car_dict = car_sizes(grid, test_case[1:])
 
     # create the fuel levels
     fuel = determine_all_fuel_levels(test_case[1:], car_dict)
@@ -109,13 +106,22 @@ def output_grid_console(fuel, grid, case):
     for row in grid:
         print(row)
 
-def get_orientation(car, row, col, grid):
-    orientation = 'h'
-    if row + 1 < HEIGHT and grid[row + 1][col] == car:
-        orientation = 'v'
-    elif row - 1 >= 0 and grid[row - 1][col] == car:
-        orientation = 'v'
+def get_orientation(car, index, grid):
+    orientation = 'v'
+    if index % WIDTH == 0 and grid[index + 1] == car:
+        orientation = 'h'
+    elif index % WIDTH == WIDTH - 1 and grid[index - 1] == car:
+        orientation = 'h'
+    elif grid[index - 1] == car or grid[index + 1] == car:
+        orientation = 'h' 
+
     return orientation
+
+def get_fuel(car, fuel_list):
+    for fuel in fuel_list:
+        if car == fuel[0]:
+            return int(fuel[1])
+    return 100
 
 def uniform_cost_search(goal, start):
     unf_cost = 1 # for up, down, left, right
@@ -151,12 +157,13 @@ if __name__ == '__main__':
                 continue
             test_cases.append(tokens)
 
+    print(test_cases)
     # for outputting to console (as of right now)
     fuel_list = []
     grid_list = []
     car_dict_list = []
 
-    # process the test cases
+    # # process the test cases
     for i, test_case in enumerate(test_cases):
         grid, fuel, car_dict = get_grid_and_fuel(test_case)
         
@@ -164,16 +171,17 @@ if __name__ == '__main__':
         grid_list.append(grid)
         car_dict_list.append(car_dict)
 
-        # todo run algorithms
+    #     # todo run algorithms
         print(grid)
-        # todo optimize this
-        format_solution(test_case, 'test', i+1, test_case)
+        print(car_dict)
+    #     # todo optimize this
+    #     format_solution(test_case, 'test', i+1, test_case)
 
-    # Print the grid to console and its fuel levels
-    case = 0
-    for fuel, grid in zip(fuel_list, grid_list):
-        # output_grid_console(fuel, grid, case)
-        case += 1
+    # # Print the grid to console and its fuel levels
+    # case = 0
+    # for fuel, grid in zip(fuel_list, grid_list):
+    #     # output_grid_console(fuel, grid, case)
+    #     case += 1
 
     # output TODO
     # For each grid:
