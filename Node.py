@@ -8,6 +8,9 @@ class Node:
         self.car_dict = car_dict
         self.board = board
 
+    def __lt__(self, other):
+        return self.total_cost < other.total_cost
+
     def __key(self):
         return (self.board, self.parent)
 
@@ -70,18 +73,15 @@ class Node:
 
             ### Intended DIRECTIONS: DOWN = -1, UP = 1, LEFT = -1, RIGHT = 1
             node = None
-            print(free_spaces_front, free_spaces_back)
             if free_spaces_front:
                 max_dist = free_spaces_front if free_spaces_front <= fuel else fuel
                 move_direction = 1
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
-                    new_board, new_index = self.update_board(car, move, move_direction, start, end, step)
-                    self.update_dict(move, car)
-                    print(new_board, new_index)
-                    # node = Node(self, self.total_cost + move, self.update_dict(), new_board)
-                    # children.append(node)
+                    new_board, new_index = self.update_board(move, move_direction, start, end, step)
+                    node = Node(self, self.total_cost + move, self.update_dict(move, car, new_index), new_board)
+                    children.append(node)
 
             if free_spaces_back:
                 max_dist = free_spaces_back if free_spaces_back <= fuel else fuel
@@ -89,21 +89,18 @@ class Node:
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
-                    new_board, new_index = self.update_board(car, move, move_direction, start, end, step)
-                    self.update_dict(move, car)
-                    print(new_board, new_index)
-                    # node = Node(self, self.total_cost + move, self.update_dict(), new_board)
-                    # children.append(node)
+                    new_board, new_index = self.update_board(move, move_direction, start, end, step)
+                    node = Node(self, self.total_cost + move, self.update_dict(move, car, new_index), new_board)
+                    children.append(node)
 
             # todo: if car has enoug fuel, breakdown possible moves
         return children
 
     # update board
-    def update_board(self, car, move, direction, start, end, step):
+    def update_board(self, move, direction, start, end, step):
         board = self.board
 
         first, last = start, end
-        print(board[first:last+1:step], move, direction)
         step = step * direction
         board = [*board]
         for shift in range(move):
@@ -119,9 +116,9 @@ class Node:
 
     # update dict
     # car_dict[car] = (size, index, fuel, orientation)
-    def update_dict(self, move, car):
+    def update_dict(self, move, car, index):
         car_dict = self.car_dict
-        size, index, fuel, oritentation = car_dict[car]
+        size, discard, fuel, oritentation = car_dict[car]
         fuel -= move
 
         car_dict[car] = (size, index, fuel, oritentation)

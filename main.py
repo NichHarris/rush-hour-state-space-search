@@ -120,7 +120,6 @@ if __name__ == '__main__':
         pqueue = PriorityQueue()
         start = Node(None, 0, puzzle.car_dict, puzzle.board)
         pqueue.put((0, start))
-        print(puzzle.board)
         while not pqueue.empty():
             cost, node = pqueue.get(block=False)
             if node not in visited:
@@ -132,7 +131,7 @@ if __name__ == '__main__':
                 
                 for child in children:
                     if child not in visited:
-                        pqueue.put((child.cost, child))
+                        pqueue.put((child.total_cost, child))
 
         # end timer
         puzzle.set_runtime(time.time() - start_time)
