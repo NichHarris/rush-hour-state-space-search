@@ -70,14 +70,17 @@ class Node:
 
             ### Intended DIRECTIONS: DOWN = -1, UP = 1, LEFT = -1, RIGHT = 1
             node = None
+            print(free_spaces_front, free_spaces_back)
             if free_spaces_front:
                 max_dist = free_spaces_front if free_spaces_front <= fuel else fuel
                 move_direction = 1
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
-                    self.update_board(car, move, move_direction, start, end, step)
-                    # node = Node(self, self.total_cost + move, self.update_dict(), self.update_board(car, move, move_direction, start, end, step))
+                    new_board, new_index = self.update_board(car, move, move_direction, start, end, step)
+                    self.update_dict(move, car)
+                    print(new_board, new_index)
+                    # node = Node(self, self.total_cost + move, self.update_dict(), new_board)
                     # children.append(node)
 
             if free_spaces_back:
@@ -86,8 +89,10 @@ class Node:
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
-                    self.update_board(car, move, move_direction, start, end, step)
-                    # node = Node(self, self.total_cost + move, self.update_dict(), self.update_board(car, move, move_direction, start, end, step))
+                    new_board, new_index = self.update_board(car, move, move_direction, start, end, step)
+                    self.update_dict(move, car)
+                    print(new_board, new_index)
+                    # node = Node(self, self.total_cost + move, self.update_dict(), new_board)
                     # children.append(node)
 
             # todo: if car has enoug fuel, breakdown possible moves
@@ -97,10 +102,10 @@ class Node:
     def update_board(self, car, move, direction, start, end, step):
         board = self.board
 
-        step = step * direction
         first, last = start, end
+        print(board[first:last+1:step], move, direction)
+        step = step * direction
         board = [*board]
-
         for shift in range(move):
             if direction == 1:
                 board[first], board[last+step] = board[last+step], board[first]
@@ -110,12 +115,16 @@ class Node:
             last += step
 
         board = ''.join(board)
-
-        return board[:GRID]
+        return board[:GRID], first - step
 
     # update dict
-    def update_dict(self):
+    # car_dict[car] = (size, index, fuel, orientation)
+    def update_dict(self, move, car):
         car_dict = self.car_dict
+        size, index, fuel, oritentation = car_dict[car]
+        fuel -= move
+
+        car_dict[car] = (size, index, fuel, oritentation)
         return car_dict
 
     # todo optimize this function
@@ -149,11 +158,11 @@ class Node:
             if left % WIDTH == 0:
                 # check number of free spaces to the right
                 if right < right_wall - 1:
-                    free_spaces_back = self.get_free_spaces(right + 1, right_wall, 1)
+                    free_spaces_front = self.get_free_spaces(right + 1, right_wall, 1)
             # can only move left
             elif (right + 1) % WIDTH == 0:
                 if left > left_wall:
-                    free_spaces_front = self.get_free_spaces(left - 1, left_wall - 1, -1)
+                    free_spaces_back = self.get_free_spaces(left - 1, left_wall - 1, -1)
                 # print(f'Horizontal move left {car}: {free_spaces_back}')
             # can move left or right
             else:
