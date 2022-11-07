@@ -2,11 +2,12 @@ HEIGHT = WIDTH = 6
 GRID = HEIGHT * WIDTH
 class Node:
 
-    def __init__(self, parent, total_cost, car_dict, board):
+    def __init__(self, parent, total_cost, car_dict, board, action):
         self.parent = parent
         self.total_cost = total_cost
         self.car_dict = car_dict
         self.board = board
+        self.action = action
 
     def __lt__(self, other):
         return self.total_cost < other.total_cost
@@ -76,21 +77,25 @@ class Node:
             if free_spaces_front:
                 max_dist = free_spaces_front if free_spaces_front <= fuel else fuel
                 move_direction = 1
+                move_action = 'up' if orientation == 'v' else 'right'
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
+                    action = f'{car} {move_action} {move}'
                     new_board, new_index = self.update_board(move, move_direction, start, end, step)
-                    node = Node(self, self.total_cost + move, self.update_dict(move, car, new_index), new_board)
+                    node = Node(self, self.total_cost + move, self.update_dict(move, car, new_index), new_board, action)
                     children.append(node)
 
             if free_spaces_back:
                 max_dist = free_spaces_back if free_spaces_back <= fuel else fuel
                 move_direction = -1
+                move_action = 'down' if orientation == 'v' else 'left'
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
+                    action = f'{car} {move_action} {move}'
                     new_board, new_index = self.update_board(move, move_direction, start, end, step)
-                    node = Node(self, self.total_cost + move, self.update_dict(move, car, new_index), new_board)
+                    node = Node(self, self.total_cost + move, self.update_dict(move, car, new_index), new_board, action)
                     children.append(node)
 
             # todo: if car has enoug fuel, breakdown possible moves
@@ -185,6 +190,8 @@ class Node:
 
         return []
 
+    def get_action(self):
+        return self.action
 
 # This class will hold the info on a specific state (node of the tree)
 
