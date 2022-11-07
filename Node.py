@@ -115,7 +115,7 @@ class Node:
             last += step
 
         board = ''.join(board)
-        return board[:GRID], first - step
+        return board[:GRID], first
 
     # update dict
     # car_dict[car] = (size, index, fuel, orientation)
