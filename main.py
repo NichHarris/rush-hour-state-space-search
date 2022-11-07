@@ -2,6 +2,8 @@
 import argparse
 import os
 from Puzzle import Puzzle
+from Node import Node
+from queue import PriorityQueue
 
 INPUT_FILE_PATH = 'input'
 SOLUTIONS_PATH = 'output/solutions'
@@ -47,15 +49,14 @@ def output_file_board(board):
 # get a dict of all the cars and their sizes
 def get_car_dict(board, fuel_list):
     car_dict = {}
-
     for i, car in enumerate(board):
         if car == '.':
             continue
         elif car in car_dict:
-            size, fuel, orientation = car_dict[car]
-            car_dict[car] = (size + 1, fuel, orientation)
+            size, start, fuel, orientation = car_dict[car]
+            car_dict[car] = (size + 1, start, fuel, orientation)
             continue
-        car_dict[car] = (1, get_fuel(car, fuel_list), get_orientation(car, i, board))
+        car_dict[car] = (1, i, get_fuel(car, fuel_list), get_orientation(car, i, board))
     return car_dict
 
 def get_fuel(car, fuel_list):
@@ -95,7 +96,6 @@ def uniform_cost_search(goal, start):
         if fuel == 0:
             # cant move this car
             ret = false
-
     return
 
 if __name__ == '__main__':
@@ -117,12 +117,39 @@ if __name__ == '__main__':
             test_cases.append(tokens)
 
     puzzle_list = []
-    # process the test cases
+    # process the test cases into puzzles
     for test_case in test_cases:
         board = test_case[0]
         car_dict = get_car_dict(board, test_case[1:])
 
         puzzle_list.append(Puzzle(board, test_case, car_dict))
+
+    # solve the puzzles
+    for puzzle in puzzle_list:
+        visited = set()
+        pqueue = PriorityQueue()
+        start = Node(None, 0, puzzle_list[0].car_dict, puzzle_list[0].board)
+        pqueue.put((0, start))
+
+        while not pqueue.empty():
+            cost, node = pqueue.get(block=False)
+            if node not in visited:
+                visited.add(node)
+
+                children = node.calculate_children()
+                print(children)
+                if puzzle.is_goal(node.board):
+                    print(puzzle.is_goal(node.board))
+                
+                for child in children:
+                    if child not in visited:
+                        pqueue.put((child.cost, child))
+
+            children = node.calculate_children()
+
+
+
+
 
     # output TODO
     # For each grid:
@@ -133,14 +160,17 @@ if __name__ == '__main__':
     # search output file:
         # f(n) = ? g(n) = ? h(n) = ?, state = new board state
 
-    methods = ['ucs', 'gbfs', 'astar']
-    for method in methods:
-        for num, puzzle in enumerate(puzzle_list):
-            fuel_levels = []
-            for car in puzzle.car_dict:
-                fuel_levels.append(f'{car}: {puzzle.car_dict[car][1]}')
-            write_solution_file(puzzle.board, fuel_levels, method, (num + 1), puzzle.board)
+        # f(n) = ?
+        # g(n) = node with lowest path cost
+        # h(n) = heuristic value
 
+    # methods = ['ucs', 'gbfs', 'astar']
+    # for method in methods:
+    #     for num, puzzle in enumerate(puzzle_list):
+    #         fuel_levels = []
+    #         for car in puzzle.car_dict:
+    #             fuel_levels.append(f'{car}: {puzzle.car_dict[car][2]}')
+    #         write_solution_file(puzzle.board, fuel_levels, method, (num + 1), puzzle.board)
 
     # Only move in X or Y
     # Slide into free position
