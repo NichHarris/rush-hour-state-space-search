@@ -9,6 +9,7 @@ class Node:
         self.car_dict = car_dict
         self.board = board
         self.action = action
+        self.solution_node = None
 
     def __lt__(self, other):
         return self.cost < other.cost
@@ -24,6 +25,12 @@ class Node:
 
     def __hash__(self):
         return hash(self.__key())
+
+    def set_solution_node(self, node):
+        self.solution_node = node
+
+    def get_solution_node(self):
+        return self.solution_node
 
     def add_node(self, value):
         self.nodes[value] = []
@@ -49,6 +56,15 @@ class Node:
     def get_exit(self):
         return self.nodes['AA']
         
+
+    # for outputing to output file
+    def output_file_board(self, board):
+        ret = ''
+
+        for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
+            ret += ' '.join(board[i-WIDTH:i]) + '\n'
+        return ret
+
     def calculate_children(self):
         # get the car that can move
         # get the direction that the car can move
@@ -60,7 +76,6 @@ class Node:
         for car in self.car_dict:
             size, index, fuel, orientation, is_removed = self.car_dict[car]
             car_removed = False
-
             if fuel == 0:
                 # dont add it to list, no fuel to move
                 continue
@@ -73,14 +88,17 @@ class Node:
             if orientation == 'h':
                 dir_moves = ['left', 'right']
             else:
-                dir_moves = ['up', 'down']
-            print(f'{dir} move {dir_moves[0]} {car}: {free_spaces[0]}')
-            print(f'{dir} move {dir_moves[1]} {car}: {free_spaces[1]}')
+                dir_moves = ['down', 'up']
+            # print(f'{dir} move {dir_moves[0]} {car}: {free_spaces[0]}')
+            # print(f'{dir} move {dir_moves[1]} {car}: {free_spaces[1]}')
 
             ### Intended DIRECTIONS: DOWN = -1, UP = 1, LEFT = -1, RIGHT = 1
             node = None
             move_directions = (1, -1)
 
+            # now for this specific car, we calculate the boards for the possible moves it can make
+            # each move will produce a new board i.e. a new node (B left 3) will produce 3 boards, left 1, left 2, left 3, these are produced from
+            # the original board self.board
             for free_space, move_direction in zip(free_spaces, move_directions):
                 max_dist = free_space if free_space < fuel else fuel
 
@@ -92,11 +110,11 @@ class Node:
 
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
+
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
                     action = f'{car} {move_action} {move}'
-                    new_board, new_index = self.update_board(move, move_direction, start, end, step)
-                    searche_path += 1
 
+                    new_board, new_index = self.update_board(self.board, move, move_direction, start, end, step)
                     if self.is_goal(new_board):
                         # we have found the goal state
                         # we push the move to the child nodes
@@ -111,7 +129,6 @@ class Node:
                         # self.car_dict.pop(car)
                         new_board = new_board.replace(car, '.')
                         car_removed = True
-                        print('car removed')
 
                     node = Node(self, self.total_cost + 1, self.update_dict(move, car, new_index, car_removed), new_board, action)
                     children.append(node)
@@ -124,8 +141,7 @@ class Node:
         return children, searche_path
 
     # update board
-    def update_board(self, move, direction, start, end, step):
-        board = self.board
+    def update_board(self, board, move, direction, start, end, step):
 
         first, last = start, end
         step = step * direction
@@ -149,11 +165,18 @@ class Node:
     # update dict
     # car_dict[car] = (size, index, fuel, orientation, is_removed)
     def update_dict(self, move, car, index, removed):
-        car_dict = self.car_dict
+
+        # make a copy of the current dict
+        car_dict = self.car_dict.copy()
+
+        # get the info for the car from the dict
         size, discard, fuel, oritentation, discard = car_dict[car]
         fuel -= move
 
+        # update the dict entry for the car
         car_dict[car] = (size, index, fuel, oritentation, removed)
+
+        # return the updated dict to be added to the node
         return car_dict
 
     # todo optimize this function
@@ -164,6 +187,7 @@ class Node:
             top, bottom = index, HEIGHT*(size - 1) + index
             top_wall = top % WIDTH
             bottom_wall = top_wall + GRID - HEIGHT
+
             # we are at the top of the board, can only move down
             if top == top_wall:
                 if bottom < bottom_wall:
@@ -182,8 +206,7 @@ class Node:
             left, right = index, index + size - 1
             left_wall = int(left / WIDTH) * WIDTH
             right_wall = left_wall + WIDTH
-            print(left, right)
-            print(left_wall, right_wall)
+
             # we are at the left of the board, can only move right
             if left % WIDTH == 0:
                 # check number of free spaces to the right

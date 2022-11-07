@@ -156,14 +156,15 @@ if __name__ == '__main__':
 
 
                 children, path = node.calculate_children()
-                search_path_length += path
+               
                 for child in children:
                     if child not in closed:
-                        print(child.action)
-                        print(output_file_board(child.board))
+                        search_path_length += 1
+                        # print(child.action)
+                        # print(output_file_board(child.board))
                         if puzzle.is_goal(child.board):
-                            print('goal')
-                            print(output_file_board(child.board))
+                            # # print('goal')
+                            # print(output_file_board(child.board))
                             actions = get_solution_path(child)
                             solution_path_length = len(actions)
                             if solution_path_length < min_path_length:
@@ -173,7 +174,8 @@ if __name__ == '__main__':
                                     car = action[1][0]
                                     fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
                                     solution_path.append(f'{action[1]} {action[2][car][2]} {action[0]} {fuels}')
-                            continue
+                                puzzle.solution_node = child
+                            break
                         open.put((child.cost, child))
 
                 # if puzzle.is_goal(node.board):
@@ -187,9 +189,9 @@ if __name__ == '__main__':
         puzzle.set_runtime(time.time() - start_time)
         print(puzzle.runtime)
         print(search_path_length)
-        print(solution_path)
+        print(output_file_board(puzzle.solution_node.board))
         print(min_path_length)
-        exit()
+        # exit()
 
 
     
