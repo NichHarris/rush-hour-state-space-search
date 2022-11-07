@@ -126,30 +126,55 @@ if __name__ == '__main__':
         # start timer
         start_time = time.time()
 
-        visited = set()
-        pqueue = PriorityQueue()
+        # closed set
+        closed = set()
+        # open queue
+        open = PriorityQueue()
         start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
-        pqueue.put((0, start))
+        open.put((0, start))
         search_path_length = 0
+        min_path_length = 10**8
+        solution_path = []
         actions = []
-        while not pqueue.empty():
-            cost, node = pqueue.get(block=False)
-            if node not in visited:
-                visited.add(node)
+        while not open.empty():
+            cost, node = open.get(block=False)
+            if node not in closed:
+                closed.add(node)
+
+                # if puzzle.is_goal(node.board):
+                #     print('goal')
+                #     print(output_file_board(node.board))
+                #     actions = get_solution_path(node)
+                #     solution_path_length = len(actions)
+                #     if solution_path_length < min_path_length:
+                #         min_path_length = solution_path_length
+                #         fuels = ''
+                #         for action in actions:
+                #             car = action[1][0]
+                #             fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
+                #             solution_path.append(f'{action[1]} {action[2][car][2]} {action[0]} {fuels}')
+
 
                 children, path = node.calculate_children()
                 search_path_length += path
                 for child in children:
-                    if child not in visited:
+                    if child not in closed:
                         print(child.action)
                         print(output_file_board(child.board))
                         if puzzle.is_goal(child.board):
                             print('goal')
                             print(output_file_board(child.board))
                             actions = get_solution_path(child)
-                            print('done')
-                            break
-                        pqueue.put((child.cost, child))
+                            solution_path_length = len(actions)
+                            if solution_path_length < min_path_length:
+                                min_path_length = solution_path_length
+                                fuels = ''
+                                for action in actions:
+                                    car = action[1][0]
+                                    fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
+                                    solution_path.append(f'{action[1]} {action[2][car][2]} {action[0]} {fuels}')
+                            continue
+                        open.put((child.cost, child))
 
                 # if puzzle.is_goal(node.board):
                 #     # move up child to get the solution path
@@ -162,12 +187,8 @@ if __name__ == '__main__':
         puzzle.set_runtime(time.time() - start_time)
         print(puzzle.runtime)
         print(search_path_length)
-        
-        fuels = ''
-        for action in actions:
-            car = action[1][0]
-            fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
-            print(action[1], action[2][car][2] ,action[0], fuels)
+        print(solution_path)
+        print(min_path_length)
         exit()
 
 

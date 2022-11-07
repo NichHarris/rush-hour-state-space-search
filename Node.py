@@ -14,7 +14,7 @@ class Node:
         return self.cost < other.cost
 
     def __key(self):
-        return (self.cost, self.board)
+        return (self.cost, self.board, self.action)
 
     # compute if current node is equal to an existing visited node
     def __eq__(self, other):
@@ -69,8 +69,13 @@ class Node:
 
             # todo: remove, for debugging
             dir = 'Horizontal' if orientation == 'h' else 'Vertical'
-            # print(f'{dir} move left {car}: {free_spaces[0]}')
-            # print(f'{dir} move right {car}: {free_spaces[1]}')
+            dir_moves = []
+            if orientation == 'h':
+                dir_moves = ['left', 'right']
+            else:
+                dir_moves = ['up', 'down']
+            print(f'{dir} move {dir_moves[0]} {car}: {free_spaces[0]}')
+            print(f'{dir} move {dir_moves[1]} {car}: {free_spaces[1]}')
 
             ### Intended DIRECTIONS: DOWN = -1, UP = 1, LEFT = -1, RIGHT = 1
             node = None
@@ -162,11 +167,11 @@ class Node:
             # we are at the top of the board, can only move down
             if top == top_wall:
                 if bottom < bottom_wall:
-                    free_spaces_front = self.get_free_spaces(bottom + HEIGHT, bottom_wall, HEIGHT)
+                    free_spaces_front = self.get_free_spaces(bottom + HEIGHT, bottom_wall + 1, HEIGHT)
             # can only move up
             elif bottom == bottom_wall:
                 if top > top_wall:
-                    free_spaces_back = self.get_free_spaces(top, top_wall, HEIGHT)
+                    free_spaces_back = self.get_free_spaces(top - HEIGHT, top_wall - 1, -HEIGHT)
             # can move up or down
             else:
                 if bottom < bottom_wall:
@@ -177,7 +182,8 @@ class Node:
             left, right = index, index + size - 1
             left_wall = int(left / WIDTH) * WIDTH
             right_wall = left_wall + WIDTH
-
+            print(left, right)
+            print(left_wall, right_wall)
             # we are at the left of the board, can only move right
             if left % WIDTH == 0:
                 # check number of free spaces to the right
