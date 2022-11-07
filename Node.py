@@ -55,18 +55,20 @@ class Node:
         for car in self.car_dict:
             size, index, fuel, orientation = self.car_dict[car]
 
+            # todo redo this entire section using the grid and BFS, then compare the implementation speeds
+            grid =  [[self.board[i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
             # can move up or down
             if orientation == 'h':
                 top, bottom = index, HEIGHT*size - index
                 # we are at the top of the board, can only move down
                 if top < HEIGHT:
-                    return
+                    pass
                 # can only move up
                 elif bottom >= GRID - WIDTH:
-                    return
+                    pass
                 # can move up or down
                 else:
-                    return
+                    pass
             else: # can move left or right
                 left, right = index, index + size - 1
                 # we are at the left of the board, can only move right
@@ -77,7 +79,7 @@ class Node:
                     for i in range(right, right_wall):
                         if self.board[i] == '.':
                             free_spaces += 1
-                    return
+                    
 
                 # can only move left
                 elif (right + 1) % WIDTH == 0:
@@ -86,11 +88,13 @@ class Node:
                     for i in range(left, left_wall, -1): #todo check here for out of bounds
                         if self.board[i] == '.':
                             free_spaces += 1
-                    return
+                    
                 # can move left or right
-                else:
-
-                    return
+                else:   
+                    left_wall = int(index / WIDTH) * WIDTH
+                    right_wall = left_wall + WIDTH
+                    
+                    
         return children
 
 # This class will hold the info on a specific state (node of the tree)

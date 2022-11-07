@@ -4,6 +4,7 @@ import os
 from Puzzle import Puzzle
 from Node import Node
 from queue import PriorityQueue
+import time
 
 INPUT_FILE_PATH = 'input'
 SOLUTIONS_PATH = 'output/solutions'
@@ -126,9 +127,13 @@ if __name__ == '__main__':
 
     # solve the puzzles
     for puzzle in puzzle_list:
+
+        # start timer
+        start_time = time.time()
+
         visited = set()
         pqueue = PriorityQueue()
-        start = Node(None, 0, puzzle_list[0].car_dict, puzzle_list[0].board)
+        start = Node(None, 0, puzzle.car_dict, puzzle.board)
         pqueue.put((0, start))
 
         while not pqueue.empty():
@@ -137,7 +142,6 @@ if __name__ == '__main__':
                 visited.add(node)
 
                 children = node.calculate_children()
-                print(children)
                 if puzzle.is_goal(node.board):
                     print(puzzle.is_goal(node.board))
                 
@@ -145,8 +149,12 @@ if __name__ == '__main__':
                     if child not in visited:
                         pqueue.put((child.cost, child))
 
-            children = node.calculate_children()
+        # end timer
+        puzzle.set_runtime(time.time() - start_time)
+        print(puzzle.runtime)
 
+
+    
 
 
 
