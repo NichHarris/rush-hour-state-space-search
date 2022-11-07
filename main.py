@@ -151,7 +151,7 @@ if __name__ == '__main__':
 
         # end timer
         puzzle.set_runtime(time.time() - start_time)
-        print(puzzle.runtime)
+        # exit()
 
 
     

@@ -57,8 +57,9 @@ class Node:
 
             # todo redo this entire section using the grid and BFS, then compare the implementation speeds
             grid =  [[self.board[i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
+
             # can move up or down
-            if orientation == 'h':
+            if orientation == 'v':
                 top, bottom = index, HEIGHT*size - index
                 # we are at the top of the board, can only move down
                 if top < HEIGHT:
@@ -71,31 +72,55 @@ class Node:
                     pass
             else: # can move left or right
                 left, right = index, index + size - 1
+                left_wall = int(left / WIDTH) * WIDTH
+                right_wall = left_wall + WIDTH
+                # 0   1  2  3  4  5
+                # 6   7  8  9 10 11
+                # 12 13 14 15 16 17
+                # 18 19 20 21 22 23
+                # 24 25 26 27 28 29
+                # 30 31 32 33 34 35
+
                 # we are at the left of the board, can only move right
-                if left == 0:
+                if left % WIDTH == 0:
                     # check number of free spaces to the right
                     free_spaces = 0
-                    right_wall = index + WIDTH - size
-                    for i in range(right, right_wall):
-                        if self.board[i] == '.':
-                            free_spaces += 1
-                    
-
+                    if right < right_wall - 1:
+                        free_spaces = self.get_free_spaces(right + 1, right_wall, 1)
+                    print(f'Horizontal move right {car}: {free_spaces}')
                 # can only move left
                 elif (right + 1) % WIDTH == 0:
                     free_spaces = 0
-                    left_wall = index - WIDTH + size
-                    for i in range(left, left_wall, -1): #todo check here for out of bounds
-                        if self.board[i] == '.':
-                            free_spaces += 1
-                    
+                    if left > left_wall:
+                        free_spaces = self.get_free_spaces(left - 1, left_wall - 1, -1) #todo check here for out of bounds
+                    print(f'Horizontal move left {car}: {free_spaces}')
                 # can move left or right
-                else:   
-                    left_wall = int(index / WIDTH) * WIDTH
-                    right_wall = left_wall + WIDTH
-                    
-                    
+                else:
+                    free_spaces_left = free_spaces_right = 0
+                    if left > left_wall:
+                        free_spaces_left = self.get_free_spaces(left - 1, left_wall - 1, -1) #todo check here for out of bounds
+                    if right < right_wall:
+                        free_spaces_right = self.get_free_spaces(right + 1, right_wall, 1)
+                    print(f'Horizontal mid move left {car}: {free_spaces_left}')
+                    print(f'Horizontal mid move right {car}: {free_spaces_right}')
         return children
+
+    def get_free_spaces(self, start, end, step):
+        free_spaces = 0
+        for i in range(start, end, step):
+            if self.board[i] == '.':
+                free_spaces += 1
+            else:
+                break
+        return free_spaces
+
+
+    def calculate_children_bfs(self):
+        # todo redo this entire section using the grid and BFS, then compare the implementation speeds
+        grid =  [[self.board[i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
+
+        return []
+
 
 # This class will hold the info on a specific state (node of the tree)
 
