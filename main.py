@@ -84,21 +84,6 @@ def output_board_console(fuel, grid, case):
     for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
         print(' '.join(grid[i-WIDTH:i]))
 
-def uniform_cost_search(goal, start):
-    unf_cost = 1 # for up, down, left, right
-
-    # if any car reachers indexes: (.... [2][4], [2][5]) then it is removed from the grid and replaced with '.'
-    # goal: when ['A', 'A'] is in position [2][4] and [2][5] then this is the goal state, we have finished 
-    # the search and can return the path taken to get to this state, and its cost, and the total search path
-
-    # check if car has fuel remaining
-    if car in car_dict:
-        size, fuel = car_dict[car]
-        if fuel == 0:
-            # cant move this car
-            ret = false
-    return
-
 if __name__ == '__main__':
     # parse through the arguments
     parser = argparse.ArgumentParser()
@@ -111,8 +96,8 @@ if __name__ == '__main__':
     # read the file
     with open(input_file, 'r') as file:
         for line in file.readlines():
-            tokens = line.strip().split(' ')
-
+            tokens = line.strip().split(' ')[0].split('#')
+            
             if tokens[0] == '#' or tokens[0] == '':
                 continue
             test_cases.append(tokens)
@@ -135,7 +120,7 @@ if __name__ == '__main__':
         pqueue = PriorityQueue()
         start = Node(None, 0, puzzle.car_dict, puzzle.board)
         pqueue.put((0, start))
-
+        print(puzzle.board)
         while not pqueue.empty():
             cost, node = pqueue.get(block=False)
             if node not in visited:
