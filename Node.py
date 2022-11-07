@@ -58,56 +58,62 @@ class Node:
             # todo redo this entire section using the grid and BFS, then compare the implementation speeds
             grid =  [[self.board[i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
 
+            free_spaces_front = free_spaces_back = 0
             # can move up or down
             if orientation == 'v':
-                top, bottom = index, HEIGHT*size - index
+                top, bottom = index, HEIGHT*(size - 1) + index
+                top_wall = top % WIDTH
+                bottom_wall = top_wall + GRID - HEIGHT
+                print(top, bottom)
+                print(top_wall, bottom_wall)
                 # we are at the top of the board, can only move down
-                if top < HEIGHT:
-                    pass
+                if top == top_wall:
+                    if bottom < bottom_wall:
+                        free_spaces_front = self.get_free_spaces(bottom + HEIGHT, bottom_wall, HEIGHT)
+                    print(f'Vertical move down {car}: {free_spaces_front}')
                 # can only move up
-                elif bottom >= GRID - WIDTH:
-                    pass
+                elif bottom == bottom_wall:
+                    if top > top_wall:
+                        free_spaces_back = self.get_free_spaces(top, top_wall, HEIGHT)
+                    print(f'Vertical move up {car}: {free_spaces_back}')
                 # can move up or down
                 else:
-                    pass
+                    if bottom < bottom_wall:
+                        free_spaces_front = self.get_free_spaces(bottom + HEIGHT, bottom_wall, -HEIGHT) #todo check here for out of bounds
+                    if top > top_wall:
+                        free_spaces_back = self.get_free_spaces(top + HEIGHT, top_wall, HEIGHT)
+                    print(f'Vertical mid move down {car}: {free_spaces_front}')
+                    print(f'Vertical mid move up {car}: {free_spaces_back}')
             else: # can move left or right
                 left, right = index, index + size - 1
                 left_wall = int(left / WIDTH) * WIDTH
                 right_wall = left_wall + WIDTH
-                # 0   1  2  3  4  5
-                # 6   7  8  9 10 11
-                # 12 13 14 15 16 17
-                # 18 19 20 21 22 23
-                # 24 25 26 27 28 29
-                # 30 31 32 33 34 35
 
                 # we are at the left of the board, can only move right
                 if left % WIDTH == 0:
                     # check number of free spaces to the right
-                    free_spaces = 0
                     if right < right_wall - 1:
-                        free_spaces = self.get_free_spaces(right + 1, right_wall, 1)
-                    print(f'Horizontal move right {car}: {free_spaces}')
+                        free_spaces_front = self.get_free_spaces(right + 1, right_wall, 1)
+                    # print(f'Horizontal move right {car}: {free_spaces_front}')
                 # can only move left
                 elif (right + 1) % WIDTH == 0:
-                    free_spaces = 0
                     if left > left_wall:
-                        free_spaces = self.get_free_spaces(left - 1, left_wall - 1, -1) #todo check here for out of bounds
-                    print(f'Horizontal move left {car}: {free_spaces}')
+                        free_spaces_back = self.get_free_spaces(left - 1, left_wall - 1, -1) #todo check here for out of bounds
+                    # print(f'Horizontal move left {car}: {free_spaces_back}')
                 # can move left or right
                 else:
-                    free_spaces_left = free_spaces_right = 0
                     if left > left_wall:
-                        free_spaces_left = self.get_free_spaces(left - 1, left_wall - 1, -1) #todo check here for out of bounds
+                        free_spaces_front = self.get_free_spaces(left - 1, left_wall - 1, -1) #todo check here for out of bounds
                     if right < right_wall:
-                        free_spaces_right = self.get_free_spaces(right + 1, right_wall, 1)
-                    print(f'Horizontal mid move left {car}: {free_spaces_left}')
-                    print(f'Horizontal mid move right {car}: {free_spaces_right}')
+                        free_spaces_back = self.get_free_spaces(right + 1, right_wall, 1)
+                    # print(f'Horizontal mid move left {car}: {free_spaces_front}')
+                    # print(f'Horizontal mid move right {car}: {free_spaces_back}')
         return children
 
     def get_free_spaces(self, start, end, step):
         free_spaces = 0
         for i in range(start, end, step):
+            print(self.board[i])
             if self.board[i] == '.':
                 free_spaces += 1
             else:
