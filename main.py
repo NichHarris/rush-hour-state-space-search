@@ -54,10 +54,10 @@ def get_car_dict(board, fuel_list):
         if car == '.':
             continue
         elif car in car_dict:
-            size, start, fuel, orientation = car_dict[car]
-            car_dict[car] = (size + 1, start, fuel, orientation)
+            size, start, fuel, orientation, is_removed = car_dict[car]
+            car_dict[car] = (size + 1, start, fuel, orientation, is_removed)
             continue
-        car_dict[car] = (1, i, get_fuel(car, fuel_list), get_orientation(car, i, board))
+        car_dict[car] = (1, i, get_fuel(car, fuel_list), get_orientation(car, i, board), False)
     return car_dict
 
 def get_fuel(car, fuel_list):
@@ -83,6 +83,16 @@ def output_board_console(fuel, grid, case):
     print(f'Case {case}: {flevels}')
     for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
         print(' '.join(grid[i-WIDTH:i]))
+
+def get_solution_path(node):
+    actions = [] # reverse this list at the end to get the order (board, action, car_dict)
+    while node.parent is not None:
+        action = [node.board, node.action, node.car_dict]
+        actions.append(action)
+        # print(actions)
+        node = node.parent
+
+    return actions[::-1]
 
 if __name__ == '__main__':
     # parse through the arguments
@@ -120,24 +130,45 @@ if __name__ == '__main__':
         pqueue = PriorityQueue()
         start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
         pqueue.put((0, start))
+        search_path_length = 0
+        actions = []
         while not pqueue.empty():
             cost, node = pqueue.get(block=False)
             if node not in visited:
                 visited.add(node)
 
-                children = node.calculate_children()
-                if puzzle.is_goal(node.board):
-                    print(puzzle.is_goal(node.board))
-                
+                children, path = node.calculate_children()
+                search_path_length += path
                 for child in children:
                     if child not in visited:
                         print(child.action)
-                        pqueue.put((child.total_cost, child))
+                        print(output_file_board(child.board))
+                        if puzzle.is_goal(child.board):
+                            print('goal')
+                            print(output_file_board(child.board))
+                            actions = get_solution_path(child)
+                            print('done')
+                            break
+                        pqueue.put((child.cost, child))
 
+                # if puzzle.is_goal(node.board):
+                #     # move up child to get the solution path
+                #     print(puzzle.is_goal(node.board))
+                #     break
+
+            # write_solution_file(puzzle.board, puzzle.fuel_list, 'bfs', 1, child.board)
+            # write_search_file()
         # end timer
         puzzle.set_runtime(time.time() - start_time)
         print(puzzle.runtime)
-        # exit()
+        print(search_path_length)
+        
+        fuels = ''
+        for action in actions:
+            car = action[1][0]
+            fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
+            print(action[1], action[2][car][2] ,action[0], fuels)
+        exit()
 
 
     

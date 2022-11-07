@@ -5,15 +5,16 @@ class Node:
     def __init__(self, parent, total_cost, car_dict, board, action):
         self.parent = parent
         self.total_cost = total_cost
+        self.cost = 1
         self.car_dict = car_dict
         self.board = board
         self.action = action
 
     def __lt__(self, other):
-        return self.total_cost < other.total_cost
+        return self.cost < other.cost
 
     def __key(self):
-        return (self.board, self.parent)
+        return (self.cost, self.board)
 
     # compute if current node is equal to an existing visited node
     def __eq__(self, other):
@@ -55,51 +56,67 @@ class Node:
         # add the new node to the queue
         # return the queue
         children = [] # list of Nodes, each node will have updated parent (self), total cost, car_dict, board
-
+        searche_path = 0
         for car in self.car_dict:
-            size, index, fuel, orientation = self.car_dict[car]
+            size, index, fuel, orientation, is_removed = self.car_dict[car]
+            car_removed = False
 
             if fuel == 0:
                 # dont add it to list, no fuel to move
                 continue
 
-            free_spaces_front, free_spaces_back = self.get_spaces(size, orientation, index)
+            (free_spaces) = self.get_spaces(size, orientation, index)
 
             # todo: remove, for debugging
             dir = 'Horizontal' if orientation == 'h' else 'Vertical'
-            # print(f'{dir} move left {car}: {free_spaces_front}')
-            # print(f'{dir} move right {car}: {free_spaces_back}')
-
-            # todo: check if car has enough fuel for moves
+            # print(f'{dir} move left {car}: {free_spaces[0]}')
+            # print(f'{dir} move right {car}: {free_spaces[1]}')
 
             ### Intended DIRECTIONS: DOWN = -1, UP = 1, LEFT = -1, RIGHT = 1
             node = None
-            if free_spaces_front:
-                max_dist = free_spaces_front if free_spaces_front <= fuel else fuel
-                move_direction = 1
-                move_action = 'up' if orientation == 'v' else 'right'
+            move_directions = (1, -1)
+
+            for free_space, move_direction in zip(free_spaces, move_directions):
+                max_dist = free_space if free_space < fuel else fuel
+
+                move_action = ''
+                if move_direction == 1:
+                    move_action = 'down' if orientation == 'v' else 'right'
+                else:
+                    move_action = 'up' if orientation == 'v' else 'left'
+
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
                     action = f'{car} {move_action} {move}'
                     new_board, new_index = self.update_board(move, move_direction, start, end, step)
-                    node = Node(self, self.total_cost + move, self.update_dict(move, car, new_index), new_board, action)
+                    searche_path += 1
+
+                    if self.is_goal(new_board):
+                        # we have found the goal state
+                        # we push the move to the child nodes
+                        # then we return and move back up the tree
+                        node = Node(self, self.total_cost + 1, self.update_dict(move, car, new_index, True), new_board, action)
+                        children.append(node)
+                        return children, searche_path
+
+
+                    # remove car from board if at exit
+                    if new_board[17] == car and orientation == 'h':
+                        # self.car_dict.pop(car)
+                        new_board = new_board.replace(car, '.')
+                        car_removed = True
+                        print('car removed')
+
+                    node = Node(self, self.total_cost + 1, self.update_dict(move, car, new_index, car_removed), new_board, action)
                     children.append(node)
 
-            if free_spaces_back:
-                max_dist = free_spaces_back if free_spaces_back <= fuel else fuel
-                move_direction = -1
-                move_action = 'down' if orientation == 'v' else 'left'
-                start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
-                for move in range(max_dist, 0, -1):
-                    # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
-                    action = f'{car} {move_action} {move}'
-                    new_board, new_index = self.update_board(move, move_direction, start, end, step)
-                    node = Node(self, self.total_cost + move, self.update_dict(move, car, new_index), new_board, action)
-                    children.append(node)
+                    if (car_removed):
+                        break
 
-            # todo: if car has enoug fuel, breakdown possible moves
-        return children
+                if (car_removed):
+                    break
+        return children, searche_path
 
     # update board
     def update_board(self, move, direction, start, end, step):
@@ -119,14 +136,19 @@ class Node:
         board = ''.join(board)
         return board[:GRID], first
 
+    # determine if puzzle is in goal state
+    def is_goal(self, board):
+        puzzle_exit = board[16:18]
+        return puzzle_exit == 'AA' # goal state is exit contains 'AA'
+
     # update dict
-    # car_dict[car] = (size, index, fuel, orientation)
-    def update_dict(self, move, car, index):
+    # car_dict[car] = (size, index, fuel, orientation, is_removed)
+    def update_dict(self, move, car, index, removed):
         car_dict = self.car_dict
-        size, discard, fuel, oritentation = car_dict[car]
+        size, discard, fuel, oritentation, discard = car_dict[car]
         fuel -= move
 
-        car_dict[car] = (size, index, fuel, oritentation)
+        car_dict[car] = (size, index, fuel, oritentation, removed)
         return car_dict
 
     # todo optimize this function
