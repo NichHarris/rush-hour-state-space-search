@@ -79,9 +79,9 @@ class Node:
                 # can move up or down
                 else:
                     if bottom < bottom_wall:
-                        free_spaces_front = self.get_free_spaces(bottom + HEIGHT, bottom_wall, -HEIGHT) #todo check here for out of bounds
+                        free_spaces_front = self.get_free_spaces(bottom + HEIGHT, bottom_wall + 1, HEIGHT) #todo check here for out of bounds
                     if top > top_wall:
-                        free_spaces_back = self.get_free_spaces(top + HEIGHT, top_wall, HEIGHT)
+                        free_spaces_back = self.get_free_spaces(top - HEIGHT, top_wall - 1, -HEIGHT)
                     print(f'Vertical mid move down {car}: {free_spaces_front}')
                     print(f'Vertical mid move up {car}: {free_spaces_back}')
             else: # can move left or right
