@@ -182,40 +182,19 @@ class Node:
             bottom_wall = top_wall + GRID - HEIGHT
 
             # we are at the top of the board, can only move down
-            if top == top_wall:
-                if bottom < bottom_wall:
-                    free_spaces_front = self.get_free_spaces(bottom + HEIGHT, bottom_wall + 1, HEIGHT)
-            # can only move up
-            elif bottom == bottom_wall:
-                if top > top_wall:
-                    free_spaces_back = self.get_free_spaces(top - HEIGHT, top_wall - 1, -HEIGHT)
-            # can move up or down
-            else:
-                if bottom < bottom_wall:
-                    free_spaces_front = self.get_free_spaces(bottom + HEIGHT, bottom_wall + 1, HEIGHT)
-                if top > top_wall:
-                    free_spaces_back = self.get_free_spaces(top - HEIGHT, top_wall - 1, -HEIGHT)
+            if bottom < bottom_wall:
+                free_spaces_front = self.get_free_spaces(bottom + HEIGHT, bottom_wall + 1, HEIGHT)
+            if top > top_wall:
+                free_spaces_back = self.get_free_spaces(top - HEIGHT, top_wall - 1, -HEIGHT)
         else: # can move left or right
             left, right = index, index + size - 1
             left_wall = int(left / WIDTH) * WIDTH
             right_wall = left_wall + WIDTH
 
-            # we are at the left of the board, can only move right
-            if left % WIDTH == 0:
-                # check number of free spaces to the right
-                if right < right_wall - 1:
-                    free_spaces_front = self.get_free_spaces(right + 1, right_wall, 1)
-            # can only move left
-            elif (right + 1) % WIDTH == 0:
-                if left > left_wall:
-                    free_spaces_back = self.get_free_spaces(left - 1, left_wall - 1, -1)
-                # print(f'Horizontal move left {car}: {free_spaces_back}')
-            # can move left or right
-            else:
-                if left > left_wall:
-                    free_spaces_back = self.get_free_spaces(left - 1, left_wall - 1, -1)
-                if right < right_wall:
-                    free_spaces_front = self.get_free_spaces(right + 1, right_wall, 1)
+            if right < right_wall - 1:
+                free_spaces_front = self.get_free_spaces(right + 1, right_wall, 1)
+            if left > left_wall:
+                free_spaces_back = self.get_free_spaces(left - 1, left_wall - 1, -1)
         return free_spaces_front, free_spaces_back
 
     def get_free_spaces(self, start, end, step):
