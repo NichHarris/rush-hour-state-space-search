@@ -121,7 +121,7 @@ if __name__ == '__main__':
         puzzle_list.append(Puzzle(board, test_case, car_dict))
 
     # solve the puzzles
-    for puzzle in puzzle_list:
+    for i, puzzle in enumerate(puzzle_list):
 
         # start timer
         start_time = time.time()
@@ -159,7 +159,6 @@ if __name__ == '__main__':
                
                 for child in children:
                     if child not in closed:
-                        search_path_length += 1
                         # print(child.action)
                         # print(output_file_board(child.board))
                         if puzzle.is_goal(child.board):
@@ -174,9 +173,10 @@ if __name__ == '__main__':
                                     car = action[1][0]
                                     fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
                                     solution_path.append(f'{action[1]} {action[2][car][2]} {action[0]} {fuels}')
-                                puzzle.solution_node = child
+                                puzzle.set_solution_node(child)
                             break
                         open.put((child.cost, child))
+                        search_path_length += 1
 
                 # if puzzle.is_goal(node.board):
                 #     # move up child to get the solution path
@@ -186,11 +186,15 @@ if __name__ == '__main__':
             # write_solution_file(puzzle.board, puzzle.fuel_list, 'bfs', 1, child.board)
             # write_search_file()
         # end timer
+        print(f'Case {i}')
         puzzle.set_runtime(time.time() - start_time)
-        print(puzzle.runtime)
-        print(search_path_length)
-        print(output_file_board(puzzle.solution_node.board))
-        print(min_path_length)
+        print(f'Runtime: {puzzle.runtime}')
+        print(f'Search path len: {search_path_length}')
+        sol = puzzle.solution_node
+        if sol is not None:
+            print(output_file_board(sol.board))
+            
+        print(f'Min length: {min_path_length}')
         # exit()
 
 

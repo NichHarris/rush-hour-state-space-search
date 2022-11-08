@@ -9,13 +9,12 @@ class Node:
         self.car_dict = car_dict
         self.board = board
         self.action = action
-        self.solution_node = None
 
     def __lt__(self, other):
         return self.cost < other.cost
 
     def __key(self):
-        return (self.cost, self.board, self.action)
+        return (self.action)
 
     # compute if current node is equal to an existing visited node
     def __eq__(self, other):
@@ -25,12 +24,6 @@ class Node:
 
     def __hash__(self):
         return hash(self.__key())
-
-    def set_solution_node(self, node):
-        self.solution_node = node
-
-    def get_solution_node(self):
-        return self.solution_node
 
     def add_node(self, value):
         self.nodes[value] = []

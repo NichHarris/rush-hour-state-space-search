@@ -23,9 +23,16 @@ class Puzzle:
         self.search_path = []
         self.solution_path = []
         self.final_fuel = []
+        self.solution_node = None
 
     def __str__(self):
         return f'Puzzle: {self.board}'
+
+    def set_solution_node(self, node):
+        self.solution_node = node
+
+    def get_solution_node(self):
+        return self.solution_node
 
     def get_board(self):
         return self.board
