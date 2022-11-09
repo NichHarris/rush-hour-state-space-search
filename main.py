@@ -11,7 +11,6 @@ SOLUTIONS_PATH = 'output/solutions'
 SEARCH_PATH = 'output/search'
 HEIGHT = WIDTH = 6
 
-# def format_solution(initial_board, runtime, search_path, solution_path_length, solution_path, method, id):
 def write_solution_file(board, initial_fuel, method, id, final_board):
     output_file = f'{SOLUTIONS_PATH}/{method}-sol-{id}.txt'
     if not os.path.exists(SOLUTIONS_PATH):
@@ -85,14 +84,104 @@ def output_board_console(fuel, grid, case):
         print(' '.join(grid[i-WIDTH:i]))
 
 def get_solution_path(node):
-    actions = [] # reverse this list at the end to get the order (board, action, car_dict)
+    actions = []
     while node.parent is not None:
         action = [node.board, node.action, node.car_dict]
         actions.append(action)
-        # print(actions)
         node = node.parent
 
     return actions[::-1]
+
+def uniform_cost_search(puzzle):
+
+    # start timer
+    start_time = time.time()
+
+    # closed set
+    closed = {}
+
+    # open queue
+    open = PriorityQueue()
+
+    min_path_length = 10**8
+    solution_node = None
+    # start condition
+    start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
+    open.put((0, start))
+
+    while not open.empty():
+        total_cost, curr_node = open.get(block=False)
+
+        if puzzle.is_goal(curr_node.board):
+            if puzzle.solution_node != None:
+                if total_cost < puzzle.solution_node.total_cost:
+                    puzzle.solution_node = curr_node
+                    # we found a new minimum path length
+                    break
+        elif curr_node.board in closed:
+            # we skip since it's already in closed
+            continue
+        elif check_in_open(open, curr_node):
+            continue
+        else:
+            closed[curr_node.board] = total_cost
+            children = curr_node.calculate_children(closed.copy())
+
+            for child in reversed(children):
+                if puzzle.is_goal(child.board):
+                    solution_path, temp, min_path_length = goal_reached(puzzle, child, min_path_length)
+                    puzzle.solution_node = child
+                    return puzzle.solution_node, time.time() - start_time, min_path_length
+                elif child.board in closed:
+                    continue
+                else:
+                    open.put((child.cost, child))
+
+        # print(closed)
+
+    return puzzle.solution_node, time.time() - start_time, min_path_length
+
+def goal_reached(puzzle, child, min_path_length):
+    actions = get_solution_path(child)
+    solution_path_length = len(actions)
+    solution_path = []
+    temp = []
+
+    if solution_path_length < min_path_length:
+        min_path_length = solution_path_length
+        fuels = ''
+        for action in actions:
+            car = action[1][0]
+            fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
+            # solution_path.append(f'{action[1]} {action[2][car][2]} {action[0]} {fuels}')
+            solution_path.append(action[1])
+            temp.append(action[0])
+        puzzle.set_solution_node(child)
+    return solution_path, temp, min_path_length
+
+def print_solution_path(node):
+    solution_path = []
+    board_states = []
+    while node.parent is not None:
+        solution_path.append(node.action)
+        board_states.append(node.board)
+        node = node.parent
+
+    solution_path = solution_path[::-1]
+    board_states = board_states[::-1]
+
+    print('Solution path:' + f' {len(solution_path)}')
+
+    for path, board in zip(solution_path, board_states):
+        print(path)
+        print(output_file_board(board))
+
+def check_in_open(open, node):
+    for check in open.queue:
+        if check[1].board == node.board:
+            return True
+    return False
+
 
 if __name__ == '__main__':
     # parse through the arguments
@@ -122,113 +211,22 @@ if __name__ == '__main__':
 
     # solve the puzzles
     for i, puzzle in enumerate(puzzle_list):
-
-        # start timer
-        start_time = time.time()
-
-        # closed set
-        closed = set()
-        # open queue
-        open = PriorityQueue()
-        start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
-        open.put((0, start))
-        search_path_length = 0
-        min_path_length = 10**8
-        solution_path = []
-        actions = []
-        while not open.empty():
-            cost, node = open.get(block=False)
-            if node not in closed:
-                closed.add(node)
-
-                # if puzzle.is_goal(node.board):
-                #     print('goal')
-                #     print(output_file_board(node.board))
-                #     actions = get_solution_path(node)
-                #     solution_path_length = len(actions)
-                #     if solution_path_length < min_path_length:
-                #         min_path_length = solution_path_length
-                #         fuels = ''
-                #         for action in actions:
-                #             car = action[1][0]
-                #             fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
-                #             solution_path.append(f'{action[1]} {action[2][car][2]} {action[0]} {fuels}')
+        
+        solution_node, runtime, min_path_length = uniform_cost_search(puzzle)
+        if puzzle.solution_node == None:
+            print('No solution found')
+            continue
 
 
-                children, path = node.calculate_children()
-               
-                for child in children:
-                    if child not in closed:
-                        # print(child.action)
-                        # print(output_file_board(child.board))
-                        if puzzle.is_goal(child.board):
-                            # # print('goal')
-                            # print(output_file_board(child.board))
-                            actions = get_solution_path(child)
-                            solution_path_length = len(actions)
-                            if solution_path_length < min_path_length:
-                                min_path_length = solution_path_length
-                                fuels = ''
-                                for action in actions:
-                                    car = action[1][0]
-                                    fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
-                                    solution_path.append(f'{action[1]} {action[2][car][2]} {action[0]} {fuels}')
-                                puzzle.set_solution_node(child)
-                            break
-                        open.put((child.cost, child))
-                        search_path_length += 1
 
-                # if puzzle.is_goal(node.board):
-                #     # move up child to get the solution path
-                #     print(puzzle.is_goal(node.board))
-                #     break
-
-            # write_solution_file(puzzle.board, puzzle.fuel_list, 'bfs', 1, child.board)
-            # write_search_file()
         # end timer
         print(f'Case {i}')
-        puzzle.set_runtime(time.time() - start_time)
+        puzzle.set_runtime(runtime)
         print(f'Runtime: {puzzle.runtime}')
-        print(f'Search path len: {search_path_length}')
-        sol = puzzle.solution_node
-        if sol is not None:
-            print(output_file_board(sol.board))
+        print(f'Search path len: {min_path_length}')
+
+        print('Final board state')
+        print(output_file_board(puzzle.solution_node.board))
             
-        print(f'Min length: {min_path_length}')
+        print_solution_path(puzzle.solution_node)
         # exit()
-
-
-    
-
-
-
-
-    # output TODO
-    # For each grid:
-    #   For each search algorithm (UCS, GBFS, A*):
-        # output to two paths: the solution and the search
-        # for GBFS and A*: have each heuristic in a separate file
-
-    # search output file:
-        # f(n) = ? g(n) = ? h(n) = ?, state = new board state
-
-        # f(n) = ?
-        # g(n) = node with lowest path cost
-        # h(n) = heuristic value
-
-    # methods = ['ucs', 'gbfs', 'astar']
-    # for method in methods:
-    #     for num, puzzle in enumerate(puzzle_list):
-    #         fuel_levels = []
-    #         for car in puzzle.car_dict:
-    #             fuel_levels.append(f'{car}: {puzzle.car_dict[car][2]}')
-    #         write_solution_file(puzzle.board, fuel_levels, method, (num + 1), puzzle.board)
-
-    # Only move in X or Y
-    # Slide into free position
-    # Move vehicle has same cost in all directions, irrespective of distance moved
-    # A A respresents the ambulance
-    # Each vehicle has fuel, number of positions it can move
-    # Reaching 3f will take the vehicle out of the board (goal: AA reach 3f)
-
-    # From start position, determine next moves

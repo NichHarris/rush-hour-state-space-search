@@ -1,3 +1,4 @@
+
 HEIGHT = WIDTH = 6
 GRID = HEIGHT * WIDTH
 class Node:
@@ -14,7 +15,7 @@ class Node:
         return self.cost < other.cost
 
     def __key(self):
-        return (self.action)
+        return self.board
 
     # compute if current node is equal to an existing visited node
     def __eq__(self, other):
@@ -25,47 +26,14 @@ class Node:
     def __hash__(self):
         return hash(self.__key())
 
-    def add_node(self, value):
-        self.nodes[value] = []
+    def __str__(self):
+        return (f'Board: {self.board}, Move: {self.action}')
 
-    def add_edge(self, from_node, to_node, weight):
-        self.nodes[from_node].append(to_node)
-        self.nodes[to_node].append(from_node)
-        self.weights[(from_node, to_node)] = weight
-        self.weights[(to_node, from_node)] = weight
+    def setCost(self, cost):
+        self.cost = cost
 
-    def get_cost(self, from_node, to_node):
-        return self.weights[(from_node, to_node)]
-
-    def get_neighbors(self, node):
-        return self.nodes[node]
-
-    def is_goal(self):
-        ret = False
-        if self.get_exit() == 'AA':
-            ret = True
-        return ret
-
-    def get_exit(self):
-        return self.nodes['AA']
-        
-
-    # for outputing to output file
-    def output_file_board(self, board):
-        ret = ''
-
-        for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
-            ret += ' '.join(board[i-WIDTH:i]) + '\n'
-        return ret
-
-    def calculate_children(self):
-        # get the car that can move
-        # get the direction that the car can move
-        # move the car
-        # add the new node to the queue
-        # return the queue
+    def calculate_children(self, closed_list):
         children = [] # list of Nodes, each node will have updated parent (self), total cost, car_dict, board
-        searche_path = 0
         for car in self.car_dict:
             size, index, fuel, orientation, is_removed = self.car_dict[car]
             car_removed = False
@@ -74,16 +42,6 @@ class Node:
                 continue
 
             (free_spaces) = self.get_spaces(size, orientation, index)
-
-            # todo: remove, for debugging
-            dir = 'Horizontal' if orientation == 'h' else 'Vertical'
-            dir_moves = []
-            if orientation == 'h':
-                dir_moves = ['left', 'right']
-            else:
-                dir_moves = ['down', 'up']
-            # print(f'{dir} move {dir_moves[0]} {car}: {free_spaces[0]}')
-            # print(f'{dir} move {dir_moves[1]} {car}: {free_spaces[1]}')
 
             ### Intended DIRECTIONS: DOWN = -1, UP = 1, LEFT = -1, RIGHT = 1
             node = None
@@ -113,25 +71,25 @@ class Node:
                         # we push the move to the child nodes
                         # then we return and move back up the tree
                         node = Node(self, self.total_cost + 1, self.update_dict(move, car, new_index, True), new_board, action)
+                        node.setCost(0)
                         children.append(node)
-                        return children, searche_path
-
+                        return children
 
                     # remove car from board if at exit
                     if new_board[17] == car and orientation == 'h':
-                        # self.car_dict.pop(car)
                         new_board = new_board.replace(car, '.')
                         car_removed = True
 
                     node = Node(self, self.total_cost + 1, self.update_dict(move, car, new_index, car_removed), new_board, action)
-                    children.append(node)
+                    if node.board not in closed_list:
+                        children.append(node)
 
                     if (car_removed):
                         break
 
                 if (car_removed):
                     break
-        return children, searche_path
+        return children
 
     # update board
     def update_board(self, board, move, direction, start, end, step):
@@ -172,7 +130,11 @@ class Node:
         # return the updated dict to be added to the node
         return car_dict
 
-    # todo optimize this function
+    # todo optimize this function, this is gay, we can do better
+    # im just gonna change this to use the grid and go a simple BFS, much faster
+    # basically check orientation, then recurse through the grid checking the indexes
+    # if we find '.' then we can move there, if we find a car thats not the current,
+    # we return the number of free spaces we have found
     def get_spaces(self, size, orientation, index):
         free_spaces_front = free_spaces_back = 0
         # can move up or down
@@ -197,6 +159,7 @@ class Node:
                 free_spaces_back = self.get_free_spaces(left - 1, left_wall - 1, -1)
         return free_spaces_front, free_spaces_back
 
+    # should just recurse, see comment above @get_spaces
     def get_free_spaces(self, start, end, step):
         free_spaces = 0
         for i in range(start, end, step):
@@ -206,7 +169,7 @@ class Node:
                 break
         return free_spaces
 
-
+    
     def calculate_children_bfs(self):
         # todo redo this entire section using the grid and BFS, then compare the implementation speeds
         grid =  [[self.board[i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
