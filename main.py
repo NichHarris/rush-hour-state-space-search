@@ -111,18 +111,20 @@ def uniform_cost_search(puzzle):
 
     while not open.empty():
         total_cost, curr_node = open.get(block=False)
-
-        if puzzle.is_goal(curr_node.board):
+        in_open, index = check_in_open(open, curr_node)
+        if curr_node.board in closed:
+            # we skip since it's already in closed
+            continue
+        elif puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 if total_cost < puzzle.solution_node.total_cost:
                     puzzle.solution_node = curr_node
                     # we found a new minimum path length
                     break
-        elif curr_node.board in closed:
-            # we skip since it's already in closed
-            continue
-        elif check_in_open(open, curr_node):
-            continue
+        elif in_open:
+            # we skip since it's already in open, replace if it's a better path
+            if total_cost < open.queue[index][0]:
+                open.queue[index] = (total_cost, curr_node)
         else:
             closed[curr_node.board] = total_cost
             children = curr_node.calculate_children(closed.copy())
@@ -135,7 +137,7 @@ def uniform_cost_search(puzzle):
                 elif child.board in closed:
                     continue
                 else:
-                    open.put((child.cost, child))
+                    open.put((child.total_cost, child))
 
         # print(closed)
 
@@ -177,10 +179,10 @@ def print_solution_path(node):
         print(output_file_board(board))
 
 def check_in_open(open, node):
-    for check in open.queue:
+    for i, check in enumerate(open.queue):
         if check[1].board == node.board:
-            return True
-    return False
+            return True, i
+    return False, None
 
 
 if __name__ == '__main__':
