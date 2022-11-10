@@ -76,9 +76,8 @@ class Node:
                         new_car_dict = self.car_dict.copy()
                         new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
                         node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
-                        node.setCost(0)
-                        children.append(node)
-                        return children
+                        # children.append(node)
+                        return [node]
 
                     # remove car from board if at exit
                     if new_board[17] == car and orientation == 'h':

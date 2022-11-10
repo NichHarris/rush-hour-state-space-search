@@ -1,26 +1,30 @@
-Initial board configuration: BB.G.HE..G.HEAAG.I..FCCIDDF..I..F...
+Initial board configuration: BBBJCCH..J.KHAAJ.K..IDDLEEI..L....GG
 
-B B . G . H
-E . . G . H
-E A A G . I
-. . F C C I
-D D F . . I
-. . F . . .
+B B B J C C
+H . . J . K
+H A A J . K
+. . I D D L
+E E I . . L
+. . . . G G
 
-Car fuel available: B: 100, G: 100, H: 100, E: 100, A: 100, I: 100, F: 100, C: 100, D: 100
+Car fuel available: B:100 J:3 C:100 H:3 K:4 A:100 I:100 D:100 L:100 E:100 G:100 
 
-Runtime: 0
-Search path length: 0
-Solution path length: 0
-Solution path: 0
+Runtime: 0.1822519302368164
+Search path length: 2195
+Solution path length: 6
+Solution path: I down 1; D left 3; J down 3; C left 1; K up 1; A right 3
 
+I  down 1 	99 BBBJCCH..J.KHAAJ.K...DDLEEI..L..I.GG I99 
+D  left 3 	97 BBBJCCH..J.KHAAJ.KDD...LEEI..L..I.GG I99 D97 
+J  down 3 	 0 BBB.CCH....KHAA..KDD.J.LEEIJ.L..IJGG I99 D97 J0 
+C  left 1 	99 BBBCC.H....KHAA..KDD.J.LEEIJ.L..IJGG I99 D97 J0 C99 
+K    up 1 	 3 BBBCCKH....KHAA...DD.J.LEEIJ.L..IJGG I99 D97 J0 C99 K3 
+A right 3 	97 BBBCCKH....KH...AADD.J.LEEIJ.L..IJGG I99 D97 J0 C99 K3 A97 
 
-
-! B 100, G 100, H 100, E 100, A 100, I 100, F 100, C 100, D 100
-
-B B . G . H
-E . . G . H
-E A A G . I
-. . F C C I
-D D F . . I
-. . F . . .
+! I99 D97 J0 C99 K3 A97 
+B B B C C K
+H . . . . K
+H . . . A A
+D D . J . L
+E E I J . L
+. . I J G G

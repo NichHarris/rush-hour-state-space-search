@@ -192,17 +192,18 @@ def uniform_cost_search(puzzle):
         total_cost, curr_node = open.get(block=False)
         in_open, index = check_in_open(open, curr_node)
 
-        if curr_node in closed:
-            # we skip since it's already in closed
-            continue
-        elif puzzle.is_goal(curr_node.board):
+        if puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
                 if total_cost < puzzle.solution_node.total_cost:
+                    print('here')
                     puzzle.solution_node = curr_node
-                    closed[curr_node] = total_cost
+                    # closed[curr_node] = total_cost
                     continue
                     # break
+        elif curr_node in closed:
+            # we skip since it's already in closed
+            continue
         elif in_open:
             # we skip since it's already in open, replace if it's a better path
             if total_cost < open.queue[index][0]:
@@ -213,15 +214,17 @@ def uniform_cost_search(puzzle):
 
             for child in children:
                 if puzzle.is_goal(child.board):
-                    solution_path, min_path_length = goal_reached(puzzle, child, min_path_length)
-                    puzzle.solution_path = solution_path
-                    puzzle.solution_node = child
-                    puzzle.runtime = time.time() - start_time
-                    closed[child] = child.total_cost
-                    return min_path_length, closed # not sure if i should return here, needs to continue searching just not these paths
-                elif child in closed:
-                    continue
-                else:
+                    if puzzle.solution_node != None:
+                        print('here2', child.total_cost, puzzle.solution_node.total_cost)
+                        if child.total_cost < puzzle.solution_node.total_cost:
+                            # closed[child] = child.total_cost
+                            print('here1')
+                            puzzle.solution_node = child
+                    else:
+                        puzzle.solution_node = child
+                
+                in_open, index = check_in_open(open, child)
+                if not in_open:
                     open.put((child.total_cost, child))
 
     puzzle.runtime = time.time() - start_time
