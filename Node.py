@@ -37,8 +37,7 @@ class Node:
         for car in self.car_dict:
             size, index, fuel, orientation, is_removed = self.car_dict[car]
             car_removed = False
-            if fuel == 0:
-                # dont add it to list, no fuel to move
+            if fuel <= 0:
                 continue
 
             (free_spaces) = self.get_spaces(size, orientation, index)
@@ -61,6 +60,9 @@ class Node:
 
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
+                    if fuel < move:
+                        continue
+                    fuel -= move
 
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
                     action = f'{car} {move_action} {move}'
@@ -70,7 +72,9 @@ class Node:
                         # we have found the goal state
                         # we push the move to the child nodes
                         # then we return and move back up the tree
-                        node = Node(self, self.total_cost + 1, self.update_dict(move, car, new_index, True), new_board, action)
+                        new_car_dict = self.car_dict.copy()
+                        new_car_dict[car] = (size, new_index, fuel, orientation, True)
+                        node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
                         node.setCost(0)
                         children.append(node)
                         return children
@@ -80,7 +84,9 @@ class Node:
                         new_board = new_board.replace(car, '.')
                         car_removed = True
 
-                    node = Node(self, self.total_cost + 1, self.update_dict(move, car, new_index, car_removed), new_board, action)
+                    new_car_dict = self.car_dict.copy()
+                    new_car_dict[car] = (size, new_index, fuel, orientation, True)
+                    node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
                     if node.board not in closed_list:
                         children.append(node)
 
@@ -115,13 +121,13 @@ class Node:
 
     # update dict
     # car_dict[car] = (size, index, fuel, orientation, is_removed)
-    def update_dict(self, move, car, index, removed):
+    def update_dict(self, move, car, index, fuel, removed):
 
         # make a copy of the current dict
         car_dict = self.car_dict.copy()
 
         # get the info for the car from the dict
-        size, discard, fuel, oritentation, discard = car_dict[car]
+        size, discard, curr_fuel, oritentation, discard = car_dict[car]
         fuel -= move
 
         # update the dict entry for the car

@@ -52,7 +52,8 @@ def get_car_dict(board, fuel_list):
     for i, car in enumerate(board):
         if car == '.':
             continue
-        elif car in car_dict:
+
+        if car in car_dict:
             size, start, fuel, orientation, is_removed = car_dict[car]
             car_dict[car] = (size + 1, start, fuel, orientation, is_removed)
             continue
@@ -75,13 +76,6 @@ def get_orientation(car, index, grid):
         orientation = 'h' 
 
     return orientation
-
-# for outputing to console
-def output_board_console(fuel, grid, case):
-    flevels = f'Fuel levels for: {fuel}'
-    print(f'Case {case}: {flevels}')
-    for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
-        print(' '.join(grid[i-WIDTH:i]))
 
 def get_solution_path(node):
     actions = []
@@ -184,7 +178,6 @@ def check_in_open(open, node):
             return True, i
     return False, None
 
-
 if __name__ == '__main__':
     # parse through the arguments
     parser = argparse.ArgumentParser()
@@ -197,8 +190,7 @@ if __name__ == '__main__':
     # read the file
     with open(input_file, 'r') as file:
         for line in file.readlines():
-            tokens = line.strip().split(' ')[0].split('#')
-            
+            tokens = line.strip().split(' ')
             if tokens[0] == '#' or tokens[0] == '':
                 continue
             test_cases.append(tokens)
@@ -208,21 +200,19 @@ if __name__ == '__main__':
     for test_case in test_cases:
         board = test_case[0]
         car_dict = get_car_dict(board, test_case[1:])
-
         puzzle_list.append(Puzzle(board, test_case, car_dict))
 
     # solve the puzzles
     for i, puzzle in enumerate(puzzle_list):
         
         solution_node, runtime, min_path_length = uniform_cost_search(puzzle)
+        
+        print(f'Case {i}')
         if puzzle.solution_node == None:
             print('No solution found')
             continue
 
-
-
         # end timer
-        print(f'Case {i}')
         puzzle.set_runtime(runtime)
         print(f'Runtime: {puzzle.runtime}')
         print(f'Search path len: {min_path_length}')
