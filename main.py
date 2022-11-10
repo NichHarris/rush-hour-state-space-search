@@ -192,33 +192,27 @@ def uniform_cost_search(puzzle):
         total_cost, curr_node = open.get(block=False)
         in_open, index = check_in_open(open, curr_node)
 
-        if puzzle.is_goal(curr_node.board):
+        if curr_node in closed:
+            # we skip since it's already in closed
+            continue
+        elif puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
                 if total_cost < puzzle.solution_node.total_cost:
-                    print('here')
                     puzzle.solution_node = curr_node
                     # closed[curr_node] = total_cost
                     continue
                     # break
-        elif curr_node in closed:
-            # we skip since it's already in closed
-            continue
-        elif in_open:
-            # we skip since it's already in open, replace if it's a better path
-            if total_cost < open.queue[index][0]:
-                open.queue[index] = (total_cost, curr_node)
         else:
             closed[curr_node] = total_cost
             children = curr_node.calculate_children(closed.copy())
 
             for child in children:
+                if child in closed:
+                    continue
                 if puzzle.is_goal(child.board):
                     if puzzle.solution_node != None:
-                        print('here2', child.total_cost, puzzle.solution_node.total_cost)
                         if child.total_cost < puzzle.solution_node.total_cost:
-                            # closed[child] = child.total_cost
-                            print('here1')
                             puzzle.solution_node = child
                     else:
                         puzzle.solution_node = child
@@ -226,6 +220,10 @@ def uniform_cost_search(puzzle):
                 in_open, index = check_in_open(open, child)
                 if not in_open:
                     open.put((child.total_cost, child))
+                else:
+                    if child.total_cost < open.queue[index][0]:
+                        open.queue[index] = (child.total_cost, child)
+                    continue
 
     puzzle.runtime = time.time() - start_time
     return min_path_length, closed
@@ -280,6 +278,8 @@ if __name__ == '__main__':
     methods = ['ucs', 'bgfs', 'astar']
     for i, puzzle in enumerate(puzzle_list):
         min_path_length, closed = uniform_cost_search(puzzle)
-
+        print(len(closed))
+        # for key in closed.keys():
+        #     print(key.board)
         write_solution_file(puzzle, 'ucs', i, len(closed))
         write_search_file(closed, 'ucs', i)

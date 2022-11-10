@@ -27,7 +27,7 @@ class Node:
         return hash(self.__key())
 
     def __str__(self):
-        return (f'Board: {self.board}, Move: {self.action}')
+        return self.board
 
     def setCost(self, cost):
         self.cost = cost
@@ -69,23 +69,19 @@ class Node:
                     action = f'{car} {move_action} {move}'
 
                     new_board, new_index = self.update_board(self.board, move, move_direction, start, end, step)
+                    new_car_dict = self.car_dict.copy()
                     if self.is_goal(new_board):
-                        # we have found the goal state
-                        # we push the move to the child nodes
-                        # then we return and move back up the tree
-                        new_car_dict = self.car_dict.copy()
                         new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
                         node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
-                        # children.append(node)
                         return [node]
 
                     # remove car from board if at exit
                     if new_board[17] == car and orientation == 'h':
                         new_board = new_board.replace(car, '.')
                         car_removed = True
-
-                    new_car_dict = self.car_dict.copy()
-                    new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
+                        new_car_dict.pop(car)
+                    else:
+                        new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
                     node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
                     if node not in closed_list:
                         children.append(node)
