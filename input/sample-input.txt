@@ -3,7 +3,6 @@
 #
 
 # demo 1.1
-#BBIJ....IJCC..I.AAGDDK.MGH.KLMGHFFL. 
 BBIJ....IJCC..IAAMGDDK.MGH.KL.GHFFL. 
 
 # demo 1.2

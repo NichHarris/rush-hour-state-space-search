@@ -30,15 +30,57 @@ def write_solution_file(puzzle, method, id, search_path_len):
             file.write(f'\n\n! {fuel_list}\n')
             file.writelines(f'{output_file_board(puzzle.solution_node.board)}') # todo pass final grid
         else:
-            print('here')
             file.write(f'Initial board configuration: {puzzle.board}\n\n')
             file.writelines(output_file_board(puzzle.board))
             file.write(f'\nCar fuel available: {format_fuel_list(puzzle.car_dict)}\n\n')
             file.write('Sorry, could not solve the puzzle as specified.\nError: no solution found\n\n')
             file.write(f'Runtime: {puzzle.runtime}\n') # todo get runtime val
 
-def write_search_file():
-    return
+def write_search_file(closed, method, id):
+    f_n = 0
+    g_n = 0
+    h_n = 0
+
+    ret = []
+    search_path = []
+    for key in closed.keys():
+        search_path.append(key)
+        
+    start = search_path.pop(0)
+    ret.append(f'{f_n} {g_n} {h_n} {start.board}')
+
+    # sort search path 
+    search_path.sort(key=lambda x: x.total_cost)
+
+    car_fuel = {}
+    fuel_list = ''
+    for node in search_path:
+        action = node.action.split(' ')
+        car = action[0]
+        board = node.board
+        car_dict = node.car_dict
+        car_fuel[car] = car_dict[car][2]
+
+        fuel_list = ''
+        for cf in car_fuel:
+            fuel_list += f'{cf}{car_fuel[cf]} '
+        
+        if method == 'astar':
+            h_n = 0
+
+        f_n = g_n = node.total_cost
+
+        ret.append(f'{f_n} {g_n} {h_n} {board} {fuel_list}')
+
+    printout = '\n'.join(ret)
+
+    output_file = f'{SEARCH_PATH}/{method}-search-{id}.txt'
+    if not os.path.exists(SEARCH_PATH):
+        os.makedirs(SEARCH_PATH)
+
+    with open(output_file, 'w') as file:
+        file.writelines(printout)
+    # return '\n'.join(ret), fuel_list
 
 # for outputing to output files
 def format_solution_path(node):
@@ -150,7 +192,7 @@ def uniform_cost_search(puzzle):
         total_cost, curr_node = open.get(block=False)
         in_open, index = check_in_open(open, curr_node)
 
-        if curr_node.board in closed:
+        if curr_node in closed:
             # we skip since it's already in closed
             continue
         elif puzzle.is_goal(curr_node.board):
@@ -164,7 +206,7 @@ def uniform_cost_search(puzzle):
             if total_cost < open.queue[index][0]:
                 open.queue[index] = (total_cost, curr_node)
         else:
-            closed[curr_node.board] = total_cost
+            closed[curr_node] = total_cost
             children = curr_node.calculate_children(closed.copy())
 
             for child in reversed(children):
@@ -174,7 +216,7 @@ def uniform_cost_search(puzzle):
                     puzzle.solution_node = child
                     puzzle.runtime = time.time() - start_time
                     return min_path_length, closed
-                elif child.board in closed:
+                elif child in closed:
                     continue
                 else:
                     open.put((child.total_cost, child))
@@ -254,6 +296,7 @@ if __name__ == '__main__':
         min_path_length, closed = uniform_cost_search(puzzle)
         write_solution_file(puzzle, 'ucs', i, len(closed))
 
+        write_search_file(closed, 'ucs', i)
         # # end timer
         # print(f'Runtime: {puzzle.runtime}')
         # print(f'Solution path len: {min_path_length}')

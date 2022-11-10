@@ -87,7 +87,7 @@ class Node:
                     new_car_dict = self.car_dict.copy()
                     new_car_dict[car] = (size, new_index, fuel, orientation, True)
                     node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
-                    if node.board not in closed_list:
+                    if node not in closed_list:
                         children.append(node)
 
                     if (car_removed):
@@ -119,8 +119,7 @@ class Node:
         puzzle_exit = board[16:18]
         return puzzle_exit == 'AA' # goal state is exit contains 'AA'
 
-    # update dict
-    # car_dict[car] = (size, index, fuel, orientation, is_removed)
+    # update dictionary with new car positions
     def update_dict(self, move, car, index, fuel, removed):
 
         # make a copy of the current dict
@@ -184,26 +183,3 @@ class Node:
 
     def get_action(self):
         return self.action
-
-# This class will hold the info on a specific state (node of the tree)
-
-# root = Tree()
-# root.children = [Tree(), Tree(), Tree() ......]
-# for child in root.children:
-#     child.children = [Tree(), Tree(), Tree() ......] 
-# and so on
-# class Tree:
-#     def __init__(self):
-#         # self.root = self.State()
-#         self.children = {}
-#         self.weights = {}
-#         self.board = None # current board state
-#         self.move = None # move that got us to this state
-#         self.car_dict = None # dict of all the cars and their sizes, fuel, and orientation
-
-
-    # class State:
-    #     def __init__(self):
-    #         self.parent = None # point to parent state
-    #         self.board = None # current board state
-    #         self.car_dict = None # dict of cars and their sizes, fuels, and orientations
