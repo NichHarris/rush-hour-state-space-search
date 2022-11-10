@@ -122,7 +122,7 @@ def display_solution_path(node):
         for cf in car_fuel:
             fuel_list += f'{cf}{car_fuel[cf]} '
         
-        ret.append(f'{car}{action[1]:>6} {action[2]} \t{car_fuel[car]} {board} {fuel_list}')
+        ret.append(f'{car}{action[1]:>6} {action[2]} \t{car_fuel[car]:>2} {board} {fuel_list}')
 
     return '\n'.join(ret), fuel_list
 
@@ -197,10 +197,12 @@ def uniform_cost_search(puzzle):
             continue
         elif puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
+                # we found a new minimum path length
                 if total_cost < puzzle.solution_node.total_cost:
                     puzzle.solution_node = curr_node
-                    # we found a new minimum path length
-                    break
+                    closed[curr_node] = total_cost
+                    continue
+                    # break
         elif in_open:
             # we skip since it's already in open, replace if it's a better path
             if total_cost < open.queue[index][0]:
@@ -209,13 +211,14 @@ def uniform_cost_search(puzzle):
             closed[curr_node] = total_cost
             children = curr_node.calculate_children(closed.copy())
 
-            for child in reversed(children):
+            for child in children:
                 if puzzle.is_goal(child.board):
-                    solution_path, temp, min_path_length = goal_reached(puzzle, child, min_path_length)
+                    solution_path, min_path_length = goal_reached(puzzle, child, min_path_length)
                     puzzle.solution_path = solution_path
                     puzzle.solution_node = child
                     puzzle.runtime = time.time() - start_time
-                    return min_path_length, closed
+                    closed[child] = child.total_cost
+                    return min_path_length, closed # not sure if i should return here, needs to continue searching just not these paths
                 elif child in closed:
                     continue
                 else:
@@ -228,7 +231,6 @@ def goal_reached(puzzle, child, min_path_length):
     actions = get_solution_path(child)
     solution_path_length = len(actions)
     solution_path = []
-    temp = []
 
     if solution_path_length < min_path_length:
         min_path_length = solution_path_length
@@ -236,29 +238,10 @@ def goal_reached(puzzle, child, min_path_length):
         for action in actions:
             car = action[1][0]
             fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
-            # solution_path.append(f'{action[1]} {action[2][car][2]} {action[0]} {fuels}')
             solution_path.append(action[1])
-            temp.append(action[0])
         puzzle.set_solution_node(child)
 
-    return solution_path, temp, min_path_length
-
-def print_solution_path(node):
-    solution_path = []
-    board_states = []
-    while node.parent is not None:
-        solution_path.append(node.action)
-        board_states.append(node.board)
-        node = node.parent
-
-    solution_path = solution_path[::-1]
-    board_states = board_states[::-1]
-
-    print('Solution path:' + f' {len(solution_path)}')
-
-    for path, board in zip(solution_path, board_states):
-        print(path)
-        print(output_file_board(board))
+    return solution_path, min_path_length
 
 def check_in_open(open, node):
     for i, check in enumerate(open.queue):
@@ -291,18 +274,9 @@ if __name__ == '__main__':
         puzzle_list.append(Puzzle(board, test_case, car_dict))
 
     # solve the puzzles
+    methods = ['ucs', 'bgfs', 'astar']
     for i, puzzle in enumerate(puzzle_list):
-        
         min_path_length, closed = uniform_cost_search(puzzle)
+
         write_solution_file(puzzle, 'ucs', i, len(closed))
-
         write_search_file(closed, 'ucs', i)
-        # # end timer
-        # print(f'Runtime: {puzzle.runtime}')
-        # print(f'Solution path len: {min_path_length}')
-        # print(f'Search path len: {len(closed)}')
-
-        # print('Final board state')
-        # print(output_file_board(puzzle.solution_node.board))
-            
-        # print_solution_path(puzzle.solution_node)

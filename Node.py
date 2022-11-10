@@ -60,9 +60,10 @@ class Node:
 
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
-                    if fuel < move:
+                    temp_fuel = fuel
+                    if temp_fuel < move:
                         continue
-                    fuel -= move
+                    temp_fuel -= move
 
                     # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
                     action = f'{car} {move_action} {move}'
@@ -73,7 +74,7 @@ class Node:
                         # we push the move to the child nodes
                         # then we return and move back up the tree
                         new_car_dict = self.car_dict.copy()
-                        new_car_dict[car] = (size, new_index, fuel, orientation, True)
+                        new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
                         node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
                         node.setCost(0)
                         children.append(node)
@@ -85,7 +86,7 @@ class Node:
                         car_removed = True
 
                     new_car_dict = self.car_dict.copy()
-                    new_car_dict[car] = (size, new_index, fuel, orientation, True)
+                    new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
                     node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
                     if node not in closed_list:
                         children.append(node)
@@ -135,11 +136,7 @@ class Node:
         # return the updated dict to be added to the node
         return car_dict
 
-    # todo optimize this function, this is gay, we can do better
-    # im just gonna change this to use the grid and go a simple BFS, much faster
-    # basically check orientation, then recurse through the grid checking the indexes
-    # if we find '.' then we can move there, if we find a car thats not the current,
-    # we return the number of free spaces we have found
+    # get the spaces around the car
     def get_spaces(self, size, orientation, index):
         free_spaces_front = free_spaces_back = 0
         # can move up or down
