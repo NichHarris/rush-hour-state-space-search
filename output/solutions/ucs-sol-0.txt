@@ -9,18 +9,18 @@ G H F F L .
 
 Car fuel available: B:100 I:100 J:100 C:100 A:100 M:100 G:100 D:100 K:100 H:100 L:100 F:100 
 
-Runtime: 0.000225067138671875
-Search path length: 4
+Runtime: 0.00028228759765625
+Search path length: 18
 Solution path length: 2
-Solution path: M down 2; A right 1
+Solution path: M down 1; A right 1
 
-M  down 2 	98 BBIJ....IJCC..IAA.GDDK..GH.KLMGHFFLM M98 
-A right 1 	99 BBIJ....IJCC..I.AAGDDK..GH.KLMGHFFLM M98 A99 
+M  down 1 	99 BBIJ....IJCC..IAA.GDDK.MGH.KLMGHFFL. M99 
+A right 1 	99 BBIJ....IJCC..I.AAGDDK.MGH.KLMGHFFL. M99 A99 
 
-! M98 A99 
+! M99 A99 
 B B I J . .
 . . I J C C
 . . I . A A
-G D D K . .
+G D D K . M
 G H . K L M
-G H F F L M
+G H F F L .

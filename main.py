@@ -192,8 +192,18 @@ def uniform_cost_search(puzzle):
         total_cost, curr_node = open.get(block=False)
         in_open, index = check_in_open(open, curr_node)
 
+        if puzzle.solution_node is not None:
+            if curr_node.total_cost >= puzzle.solution_node.total_cost:
+                closed[curr_node] = total_cost
+                continue
+        
         if curr_node in closed:
             # we skip since it's already in closed
+            continue
+        elif in_open:
+            # we skip since it's already in open, replace if it's a better path
+            if total_cost < open.queue[index][0]:
+                open.queue[index] = (total_cost, curr_node)
             continue
         elif puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
@@ -202,11 +212,6 @@ def uniform_cost_search(puzzle):
                     puzzle.solution_node = curr_node
                     closed[curr_node] = total_cost
                     continue
-                    # break
-        elif in_open:
-            # we skip since it's already in open, replace if it's a better path
-            if total_cost < open.queue[index][0]:
-                open.queue[index] = (total_cost, curr_node)
         else:
             closed[curr_node] = total_cost
             children = curr_node.calculate_children(closed.copy())
@@ -216,9 +221,10 @@ def uniform_cost_search(puzzle):
                     solution_path, min_path_length = goal_reached(puzzle, child, min_path_length)
                     puzzle.solution_path = solution_path
                     puzzle.solution_node = child
-                    puzzle.runtime = time.time() - start_time
-                    closed[child] = child.total_cost
-                    return min_path_length, closed # not sure if i should return here, needs to continue searching just not these paths
+                    # puzzle.runtime = time.time() - start_time
+                    open.put((child.total_cost, child))
+                    # closed[child] = child.total_cost
+                    # return min_path_length, closed # not sure if i should return here, needs to continue searching just not these paths
                 elif child in closed:
                     continue
                 else:
