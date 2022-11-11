@@ -9,22 +9,22 @@ E E I . . L
 
 Car fuel available: B:100 J:3 C:100 H:3 K:4 A:100 I:100 D:100 L:100 E:100 G:100 
 
-Runtime: 0.017052173614501953
-Search path length: 454
+Runtime: 0.01734018325805664
+Search path length: 467
 Solution path length: 6
-Solution path: I down 1; D left 2; J down 3; C left 1; K up 1; A right 3
+Solution path: I down 1; D left 3; J down 3; C left 1; K up 1; A right 3
 
 I  down 1 	99 BBBJCCH..J.KHAAJ.K...DDLEEI..L..I.GG I99 
-D  left 2 	98 BBBJCCH..J.KHAAJ.K.DD..LEEI..L..I.GG I99 D98 
-J  down 3 	 0 BBB.CCH....KHAA..K.DDJ.LEEIJ.L..IJGG I99 D98 J0 
-C  left 1 	99 BBBCC.H....KHAA..K.DDJ.LEEIJ.L..IJGG I99 D98 J0 C99 
-K    up 1 	 3 BBBCCKH....KHAA....DDJ.LEEIJ.L..IJGG I99 D98 J0 C99 K3 
-A right 3 	97 BBBCCKH....KH...AA.DDJ.LEEIJ.L..IJGG I99 D98 J0 C99 K3 A97 
+D  left 3 	97 BBBJCCH..J.KHAAJ.KDD...LEEI..L..I.GG I99 D97 
+J  down 3 	 0 BBB.CCH....KHAA..KDD.J.LEEIJ.L..IJGG I99 D97 J0 
+C  left 1 	99 BBBCC.H....KHAA..KDD.J.LEEIJ.L..IJGG I99 D97 J0 C99 
+K    up 1 	 3 BBBCCKH....KHAA...DD.J.LEEIJ.L..IJGG I99 D97 J0 C99 K3 
+A right 3 	97 BBBCCKH....KH...AADD.J.LEEIJ.L..IJGG I99 D97 J0 C99 K3 A97 
 
-! I99 D98 J0 C99 K3 A97 
+! I99 D97 J0 C99 K3 A97 
 B B B C C K
 H . . . . K
 H . . . A A
-. D D J . L
+D D . J . L
 E E I J . L
 . . I J G G

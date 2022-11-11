@@ -12,7 +12,7 @@ class Node:
         self.action = action
 
     def __lt__(self, other):
-        return self.cost < other.cost
+        return self.total_cost < other.total_cost
 
     def __key(self):
         return self.board
@@ -29,10 +29,7 @@ class Node:
     def __str__(self):
         return (f'Board: {self.board}, Move: {self.action}')
 
-    def setCost(self, cost):
-        self.cost = cost
-
-    def calculate_children(self, closed_list):
+    def calculate_children(self):
         children = [] # list of Nodes, each node will have updated parent (self), total cost, car_dict, board
         for car in self.car_dict:
             size, index, fuel, orientation, is_removed = self.car_dict[car]
@@ -86,8 +83,7 @@ class Node:
                     new_car_dict = self.car_dict.copy()
                     new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
                     node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
-                    if node not in closed_list:
-                        children.append(node)
+                    children.append(node)
 
                     if (car_removed):
                         break

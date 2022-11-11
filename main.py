@@ -214,21 +214,19 @@ def uniform_cost_search(puzzle):
                     continue
         else:
             closed[curr_node] = total_cost
-            children = curr_node.calculate_children(closed.copy())
-
+            children = curr_node.calculate_children()
+            
             for child in children:
-                if puzzle.is_goal(child.board):
+                if child in closed:
+                    if child.total_cost < closed[child]:
+                        closed.pop(child)
+                    else:
+                        continue
+                elif puzzle.is_goal(child.board):
                     solution_path, min_path_length = goal_reached(puzzle, child, min_path_length)
                     puzzle.solution_path = solution_path
                     puzzle.solution_node = child
-                    # puzzle.runtime = time.time() - start_time
-                    open.put((child.total_cost, child))
-                    # closed[child] = child.total_cost
-                    # return min_path_length, closed # not sure if i should return here, needs to continue searching just not these paths
-                elif child in closed:
-                    continue
-                else:
-                    open.put((child.total_cost, child))
+                open.put((child.total_cost, child))
 
     puzzle.runtime = time.time() - start_time
     return min_path_length, closed
