@@ -41,6 +41,8 @@ def write_search_file(closed, method, id):
     g_n = 0
     h_n = 0
 
+
+
     ret = []
     search_path = []
     for key in closed.keys():
@@ -52,24 +54,20 @@ def write_search_file(closed, method, id):
     # sort search path 
     search_path.sort(key=lambda x: x.total_cost)
 
-    car_fuel = {}
-    fuel_list = ''
+    # sort search path
     for node in search_path:
-        action = node.action.split(' ')
-        car = action[0]
         board = node.board
         car_dict = node.car_dict
-        car_fuel[car] = car_dict[car][2]
 
         fuel_list = ''
-        for cf in car_fuel:
-            fuel_list += f'{cf}{car_fuel[cf]} '
-        
-        if method == 'astar':
-            h_n = 0
+        f_n = node.total_cost
+        g_n = node.total_cost - node.heuristic_cost
+        h_n = node.heuristic_cost
 
-        f_n = g_n = node.total_cost
-
+        while node.parent is not None:
+            car = node.action[0]
+            fuel_list += f'{car}{car_dict[car][2]} '
+            node = node.parent
         ret.append(f'{f_n} {g_n} {h_n} {board} {fuel_list}')
 
     printout = '\n'.join(ret)
@@ -80,7 +78,6 @@ def write_search_file(closed, method, id):
 
     with open(output_file, 'w') as file:
         file.writelines(printout)
-    # return '\n'.join(ret), fuel_list
 
 # for outputing to output files
 def format_solution_path(node):
@@ -132,6 +129,7 @@ def output_file_board(board):
 
     for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
         ret += ' '.join(board[i-WIDTH:i]) + '\n'
+
     return ret
 
 # get a dict of all the cars and their sizes
@@ -152,10 +150,12 @@ def get_fuel(car, fuel_list):
     for fuel in fuel_list:
         if car == fuel[0]:
             return int(fuel[1])
+
     return 100
 
 def get_orientation(car, index, grid):
     orientation = 'v'
+
     if index % WIDTH == 0 and grid[index + 1] == car:
         orientation = 'h'
     elif index % WIDTH == WIDTH - 1 and grid[index - 1] == car:
@@ -167,6 +167,7 @@ def get_orientation(car, index, grid):
 
 def get_solution_path(node):
     actions = []
+
     while node.parent is not None:
         action = [node.board, node.action, node.car_dict]
         actions.append(action)
@@ -227,8 +228,8 @@ def uniform_cost_search(puzzle):
                     puzzle.solution_path = solution_path
                     puzzle.solution_node = child
                 open.put((child.total_cost, child))
-
     puzzle.runtime = time.time() - start_time
+
     return min_path_length, closed
 
 def goal_reached(puzzle, child, min_path_length):
@@ -251,6 +252,7 @@ def check_in_open(open, node):
     for i, check in enumerate(open.queue):
         if check[1].board == node.board:
             return True, i
+
     return False, None
 
 if __name__ == '__main__':
@@ -278,7 +280,7 @@ if __name__ == '__main__':
         puzzle_list.append(Puzzle(board, test_case, car_dict))
 
     # solve the puzzles
-    methods = ['ucs', 'bgfs', 'astar']
+    methods = ['ucs', 'gbfs', 'astar']
     for i, puzzle in enumerate(puzzle_list):
         min_path_length, closed = uniform_cost_search(puzzle)
 

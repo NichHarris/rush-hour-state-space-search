@@ -6,13 +6,14 @@ class Node:
     def __init__(self, parent, total_cost, car_dict, board, action):
         self.parent = parent
         self.total_cost = total_cost
+        self.heuristic_cost = 0
         self.cost = 1
         self.car_dict = car_dict
         self.board = board
         self.action = action
 
     def __lt__(self, other):
-        return self.total_cost < other.total_cost
+        return self.cost < other.cost
 
     def __key(self):
         return self.board
@@ -114,22 +115,6 @@ class Node:
         puzzle_exit = board[16:18]
         return puzzle_exit == 'AA' # goal state is exit contains 'AA'
 
-    # update dictionary with new car positions
-    def update_dict(self, move, car, index, fuel, removed):
-
-        # make a copy of the current dict
-        car_dict = self.car_dict.copy()
-
-        # get the info for the car from the dict
-        size, discard, curr_fuel, oritentation, discard = car_dict[car]
-        fuel -= move
-
-        # update the dict entry for the car
-        car_dict[car] = (size, index, fuel, oritentation, removed)
-
-        # return the updated dict to be added to the node
-        return car_dict
-
     # get the spaces around the car
     def get_spaces(self, size, orientation, index):
         free_spaces_front = free_spaces_back = 0
@@ -155,7 +140,6 @@ class Node:
                 free_spaces_back = self.get_free_spaces(left - 1, left_wall - 1, -1)
         return free_spaces_front, free_spaces_back
 
-    # should just recurse, see comment above @get_spaces
     def get_free_spaces(self, start, end, step):
         free_spaces = 0
         for i in range(start, end, step):
@@ -171,6 +155,3 @@ class Node:
         grid =  [[self.board[i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
 
         return []
-
-    def get_action(self):
-        return self.action
