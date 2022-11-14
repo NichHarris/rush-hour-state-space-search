@@ -207,6 +207,8 @@ def uniform_cost_search(puzzle):
         path_cost, curr_node = open.get(block=False)
         in_open, index = check_in_open(open, curr_node)
 
+        # ignore cases where solution is lower than current path cost
+        # checking further paths will only lead to higher costs
         if puzzle.solution_node is not None:
             if curr_node.path_cost >= puzzle.solution_node.path_cost:
                 closed[curr_node] = path_cost
@@ -227,6 +229,11 @@ def uniform_cost_search(puzzle):
                     puzzle.solution_node = curr_node
                     closed[curr_node] = path_cost
                     continue
+            else:
+                puzzle.solution_node = curr_node
+                closed[curr_node] = path_cost
+                continue
+            continue
         else:
             closed[curr_node] = path_cost
             children = curr_node.calculate_children()
@@ -237,10 +244,7 @@ def uniform_cost_search(puzzle):
                         closed.pop(child)
                     else:
                         continue
-                elif puzzle.is_goal(child.board):
-                    solution_path, min_path_length = goal_reached(puzzle, child, min_path_length)
-                    puzzle.solution_path = solution_path
-                    puzzle.solution_node = child
+
                 open.put((child.path_cost, child))
     puzzle.runtime = time.time() - start_time
 
@@ -266,6 +270,8 @@ def greedy_bfs(puzzle, heuristic):
     while not open.empty():
         heuristic_cost, curr_node = open.get(block=False)
 
+        # ignore cases where solution is lower than current path cost
+        # checking further paths will only lead to higher costs
         if puzzle.solution_node is not None:
             if curr_node.heuristic_cost >= puzzle.solution_node.heuristic_cost:
                 closed[curr_node] = heuristic_cost
@@ -281,6 +287,11 @@ def greedy_bfs(puzzle, heuristic):
                     puzzle.solution_node = curr_node
                     closed[curr_node] = curr_node.heuristic_cost
                     continue
+            else:
+                solution_path, min_path_length = goal_reached(puzzle, curr_node, min_path_length)
+                puzzle.solution_path = solution_path
+                puzzle.solution_node = curr_node
+            continue
         else:
             closed[curr_node] = heuristic_cost
             children = curr_node.calculate_children()
@@ -297,10 +308,6 @@ def greedy_bfs(puzzle, heuristic):
                         continue
                 elif in_open:
                     continue
-                elif puzzle.is_goal(child.board):
-                    solution_path, min_path_length = goal_reached(puzzle, child, min_path_length)
-                    puzzle.solution_path = solution_path
-                    puzzle.solution_node = child
 
                 open.put((child.heuristic_cost, child))
     puzzle.runtime = time.time() - start_time
@@ -327,8 +334,9 @@ def a_star(puzzle, heuristic):
     while not open.empty():
         total_cost, curr_node = open.get(block=False)
         in_open, index = check_in_open(open, curr_node)
-        print(curr_node.total_cost, curr_node.path_cost, curr_node.heuristic_cost, curr_node.action)
 
+        # ignore cases where solution is lower than current path cost
+        # checking further paths will only lead to higher costs
         if puzzle.solution_node is not None:
             if curr_node.total_cost > puzzle.solution_node.total_cost:
                 closed[curr_node] = total_cost
@@ -343,7 +351,7 @@ def a_star(puzzle, heuristic):
         elif puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
-                if curr_node.total_cost < puzzle.solution_node.total_cost:
+                if curr_node.path_cost < puzzle.solution_node.path_cost:
                     puzzle.solution_node = curr_node
                     closed[curr_node] = curr_node.total_cost
                     continue
@@ -351,6 +359,7 @@ def a_star(puzzle, heuristic):
                 solution_path, min_path_length = goal_reached(puzzle, curr_node, min_path_length)
                 puzzle.solution_path = solution_path
                 puzzle.solution_node = curr_node
+            continue
         else:
             closed[curr_node] = total_cost
             children = curr_node.calculate_children()
@@ -367,15 +376,14 @@ def a_star(puzzle, heuristic):
                         closed.pop(child)
                     else:
                         continue
+
                 if in_open:
                     if child.total_cost < open.queue[index][0]:
                         open.queue.pop(index)
-                        open.put((child.total_cost, child))
-                        continue
 
                 open.put((child.total_cost, child))
-    puzzle.runtime = time.time() - start_time
 
+    puzzle.runtime = time.time() - start_time
     return min_path_length, closed
 
 def goal_reached(puzzle, child, min_path_length):
