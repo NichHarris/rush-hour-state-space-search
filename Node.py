@@ -1,4 +1,3 @@
-
 HEIGHT = WIDTH = 6
 GRID = HEIGHT * WIDTH
 class Node:
@@ -13,7 +12,7 @@ class Node:
         self.action = action
 
     def __lt__(self, other):
-        return self.cost < other.cost
+        return self.total_cost < other.total_cost
 
     def __key(self):
         return self.board
@@ -148,7 +147,6 @@ class Node:
             else:
                 break
         return free_spaces
-
     
     def calculate_children_bfs(self):
         # todo redo this entire section using the grid and BFS, then compare the implementation speeds

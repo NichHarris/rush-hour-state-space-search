@@ -3,28 +3,33 @@ import argparse
 import os
 from Puzzle import Puzzle
 from Node import Node
+from Heuristics import Heuristics
 from queue import PriorityQueue
 import time
+import copy
 
 INPUT_FILE_PATH = 'input'
 SOLUTIONS_PATH = 'output/solutions'
 SEARCH_PATH = 'output/search'
 HEIGHT = WIDTH = 6
 
-def write_solution_file(puzzle, method, id, search_path_len):
+def write_solution_file(puzzle, method, id, search_path_len, heuristic):
     output_file = f'{SOLUTIONS_PATH}/{method}-sol-{id}.txt'
+    if heuristic != '':
+        output_file = f'{SOLUTIONS_PATH}/{method}-{heuristic}-sol-{id}.txt'
+
     if not os.path.exists(SOLUTIONS_PATH):
         os.makedirs(SOLUTIONS_PATH)
 
     with open(output_file, 'w') as file:
         if puzzle.solution_node is not None:
-            formated_path, fuel_list = display_solution_path(puzzle.solution_node)
+            solution_len, formated_path, fuel_list = display_solution_path(puzzle.solution_node)
             file.write(f'Initial board configuration: {puzzle.board}\n\n')
             file.writelines(output_file_board(puzzle.board))
             file.write(f'\nCar fuel available: {format_fuel_list(puzzle.car_dict)}\n\n')
             file.write(f'Runtime: {puzzle.runtime}\n') # todo get runtime val
             file.write(f'Search path length: {search_path_len}\n') # todo get search path length
-            file.write(f'Solution path length: {puzzle.solution_node.total_cost}\n') # todo get solution path length
+            file.write(f'Solution path length: {solution_len}\n') # todo get solution path length
             file.write(f'Solution path: {format_solution_path(puzzle.solution_node)}\n\n') # todo get solution path
             file.writelines(formated_path) # todo pass solution path
             file.write(f'\n\n! {fuel_list}\n')
@@ -36,12 +41,10 @@ def write_solution_file(puzzle, method, id, search_path_len):
             file.write('Sorry, could not solve the puzzle as specified.\nError: no solution found\n\n')
             file.write(f'Runtime: {puzzle.runtime}\n') # todo get runtime val
 
-def write_search_file(closed, method, id):
+def write_search_file(closed, method, id, heuristic):
     f_n = 0
     g_n = 0
     h_n = 0
-
-
 
     ret = []
     search_path = []
@@ -51,8 +54,12 @@ def write_search_file(closed, method, id):
     start = search_path.pop(0)
     ret.append(f'{f_n} {g_n} {h_n} {start.board}')
 
-    # sort search path 
-    search_path.sort(key=lambda x: x.total_cost)
+    # sort search path
+    if method == 'gbfs':
+        search_path.sort(key=lambda x: x.heuristic_cost)
+    else:
+        search_path.sort(key=lambda x: x.total_cost)
+
 
     # sort search path
     for node in search_path:
@@ -60,8 +67,8 @@ def write_search_file(closed, method, id):
         car_dict = node.car_dict
 
         fuel_list = ''
-        f_n = node.total_cost
-        g_n = node.total_cost - node.heuristic_cost
+        f_n = node.total_cost + node.heuristic_cost
+        g_n = node.total_cost
         h_n = node.heuristic_cost
 
         while node.parent is not None:
@@ -73,6 +80,9 @@ def write_search_file(closed, method, id):
     printout = '\n'.join(ret)
 
     output_file = f'{SEARCH_PATH}/{method}-search-{id}.txt'
+    if heuristic != '':
+        output_file = f'{SEARCH_PATH}/{method}-{heuristic}-search-{id}.txt'
+
     if not os.path.exists(SEARCH_PATH):
         os.makedirs(SEARCH_PATH)
 
@@ -101,7 +111,9 @@ def display_solution_path(node):
 
     solution_path = []
     ret = []
+    count = 0
     while node.parent is not None:
+        count += 1
         solution_path.append([node.action, node.board, node.car_dict])
         node = node.parent
     
@@ -121,7 +133,7 @@ def display_solution_path(node):
         
         ret.append(f'{car}{action[1]:>6} {action[2]} \t{car_fuel[car]:>2} {board} {fuel_list}')
 
-    return '\n'.join(ret), fuel_list
+    return count, '\n'.join(ret), fuel_list
 
 # for outputing to output file
 def output_file_board(board):
@@ -183,7 +195,7 @@ def uniform_cost_search(puzzle):
 
     # open queue
     open = PriorityQueue()
-    min_path_length = 10**8
+    min_path_length = float('inf')
 
     # start condition
     start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
@@ -228,6 +240,63 @@ def uniform_cost_search(puzzle):
                     puzzle.solution_path = solution_path
                     puzzle.solution_node = child
                 open.put((child.total_cost, child))
+    puzzle.runtime = time.time() - start_time
+
+    return min_path_length, closed
+
+def greedy_bfs(puzzle, heuristic):
+    # start timer
+    start_time = time.time()
+    # closed set
+    closed = {}
+
+    # open queue
+    open = PriorityQueue()
+    min_path_length = float('inf')
+
+    heuristics = Heuristics(puzzle.board, puzzle.car_dict)
+    # start condition
+    start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
+    start.heuristic_cost = eval(f'heuristics.perform_{heuristic}()')
+    open.put((0, start))
+
+    while not open.empty():
+        heuristic_cost, curr_node = open.get(block=False)
+
+        if puzzle.solution_node is not None:
+            if curr_node.heuristic_cost >= puzzle.solution_node.heuristic_cost:
+                closed[curr_node] = heuristic_cost
+                continue
+        
+        if curr_node in closed:
+            # we skip since it's already in closed
+            continue
+        elif puzzle.is_goal(curr_node.board):
+            if puzzle.solution_node != None:
+                # we found a new minimum path length
+                if heuristic_cost < puzzle.solution_node.heuristic_cost:
+                    puzzle.solution_node = curr_node
+                    closed[curr_node] = heuristic_cost
+                    continue
+        else:
+            closed[curr_node] = heuristic_cost
+            children = curr_node.calculate_children()
+        
+            for child in children:
+                heuristics = Heuristics(child.board, child.car_dict)
+                child.heuristic_cost = eval(f'heuristics.perform_{heuristic}()')
+
+                if child in closed:
+                    # if child.heuristic_cost < closed[child]:
+                    #     closed.pop(child)
+                    # else:
+                    #     continue
+                    continue
+                elif puzzle.is_goal(child.board):
+                    solution_path, min_path_length = goal_reached(puzzle, child, min_path_length)
+                    puzzle.solution_path = solution_path
+                    puzzle.solution_node = child
+                open.put((child.heuristic_cost, child))
     puzzle.runtime = time.time() - start_time
 
     return min_path_length, closed
@@ -281,8 +350,24 @@ if __name__ == '__main__':
 
     # solve the puzzles
     methods = ['ucs', 'gbfs', 'astar']
-    for i, puzzle in enumerate(puzzle_list):
-        min_path_length, closed = uniform_cost_search(puzzle)
+    for method in methods:
+        for i, puzzle in enumerate(puzzle_list):
+            if method == 'ucs':
+                puzzle_copy = copy.deepcopy(puzzle)
+                min_path_length, closed = uniform_cost_search(puzzle_copy)            
+                write_solution_file(puzzle_copy, method, i + 1, len(closed), '')
+                write_search_file(closed, method, i + 1, '')
 
-        write_solution_file(puzzle, 'ucs', i, len(closed))
-        write_search_file(closed, 'ucs', i)
+            if method == 'gbfs':
+                for heuristic in ['h1', 'h2', 'h3', 'h4']:
+                    puzzle_copy = copy.deepcopy(puzzle)
+                    min_path_length, closed = greedy_bfs(puzzle_copy, heuristic)
+                    write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
+                    write_search_file(closed, method, i + 1, heuristic)
+            else:
+                # for heuristic in ['h1', 'h2', 'h3', 'h4']:
+                #     puzzle_copy = copy.deepcopy(puzzle)
+                #     min_path_length, closed = a_star(puzzle_copy, heuristic)
+                #     write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
+                #     write_search_file(closed, method, i + 1, heuristic)
+                continue
