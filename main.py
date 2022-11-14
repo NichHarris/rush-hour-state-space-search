@@ -42,6 +42,7 @@ def write_solution_file(puzzle, method, id, search_path_len, heuristic):
             file.write(f'Runtime: {puzzle.runtime}\n') # todo get runtime val
 
 def write_search_file(closed, method, id, heuristic):
+
     f_n = 0
     g_n = 0
     h_n = 0
@@ -52,7 +53,17 @@ def write_search_file(closed, method, id, heuristic):
         search_path.append(key)
         
     start = search_path.pop(0)
-    ret.append(f'{f_n} {g_n} {h_n} {start.board}')
+
+    if method == 'astar':
+        f_n = start.total_cost
+        g_n = start.path_cost
+        h_n = start.heuristic_cost
+    elif method == 'gbfs':
+        f_n = h_n = start.heuristic_cost
+    elif method == 'ucs':
+        f_n = g_n = start.path_cost
+
+    ret.append(f'{f_n:>2} {g_n:>2} {h_n:>2} {start.board}')
 
     # sort search path
     if method == 'gbfs':
@@ -69,15 +80,20 @@ def write_search_file(closed, method, id, heuristic):
         car_dict = node.car_dict
 
         fuel_list = ''
-        f_n = node.total_cost if method == 'astar' else node.path_cost
-        g_n = node.path_cost
-        h_n = node.heuristic_cost
+        if method == 'astar':
+            f_n = node.total_cost
+            g_n = node.path_cost
+            h_n = node.heuristic_cost
+        elif method == 'gbfs':
+            f_n = h_n = node.heuristic_cost
+        elif method == 'ucs':
+            f_n = g_n = node.path_cost
 
         while node.parent is not None:
             car = node.action[0]
             fuel_list += f'{car}{car_dict[car][2]} '
             node = node.parent
-        ret.append(f'{f_n} {g_n} {h_n} {board} {fuel_list}')
+        ret.append(f'{f_n:>2} {g_n:>2} {h_n:>2} {board} {fuel_list}')
 
     printout = '\n'.join(ret)
 
