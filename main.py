@@ -274,9 +274,9 @@ def greedy_bfs(puzzle, heuristic):
         elif puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
-                if heuristic_cost < puzzle.solution_node.heuristic_cost:
+                if curr_node.total_cost < puzzle.solution_node.total_cost:
                     puzzle.solution_node = curr_node
-                    closed[curr_node] = heuristic_cost
+                    closed[curr_node] = curr_node.heuristic_cost
                     continue
         else:
             closed[curr_node] = heuristic_cost
@@ -285,17 +285,19 @@ def greedy_bfs(puzzle, heuristic):
             for child in children:
                 heuristics = Heuristics(child.board, child.car_dict)
                 child.heuristic_cost = eval(f'heuristics.perform_{heuristic}()')
-
+                in_open, index = check_in_open(open, child)
                 if child in closed:
-                    # if child.heuristic_cost < closed[child]:
-                    #     closed.pop(child)
-                    # else:
-                    #     continue
+                    if child.total_cost < closed[child]:
+                        closed.pop(child)
+                    else:
+                        continue
+                elif in_open:
                     continue
                 elif puzzle.is_goal(child.board):
                     solution_path, min_path_length = goal_reached(puzzle, child, min_path_length)
                     puzzle.solution_path = solution_path
                     puzzle.solution_node = child
+
                 open.put((child.heuristic_cost, child))
     puzzle.runtime = time.time() - start_time
 
