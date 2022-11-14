@@ -1,3 +1,14 @@
+# This file contains the information relating to the heuristic functions
+
+# This includes:
+#   - the board state
+#   - the car dictionary
+#   - the lambda value
+#   - h1: Number of blocking vehicles
+#   - h2: Number of blocked positions
+#   - h3: Number of blocking vehicles * LAMBDA
+#   - h4: The number of blocked positions, when a blocking vehicle's fuel is 0, h = inf
+
 HEIGHT = WIDTH = 6
 GRID = HEIGHT * WIDTH
 

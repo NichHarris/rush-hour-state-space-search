@@ -1,3 +1,14 @@
+# This file contains the information relating to a Node
+
+# This includes:
+#   - the parent node
+#   - the current board state
+#   - the action taken to get to this state
+#   - the updated car dictionary
+#   - the total cost to reach this state
+#   - the heuristic value of the node
+#   - the cost of the path + heuristic
+
 HEIGHT = WIDTH = 6
 GRID = HEIGHT * WIDTH
 class Node:

@@ -435,6 +435,7 @@ if __name__ == '__main__':
 
     # solve the puzzles
     methods = ['ucs', 'gbfs', 'astar']
+    heuristics = ['h1', 'h2', 'h3', 'h4']
     for method in methods:
         for i, puzzle in enumerate(puzzle_list):
             if method == 'ucs':
@@ -444,13 +445,13 @@ if __name__ == '__main__':
                 write_search_file(closed, method, i + 1, '')
 
             elif method == 'gbfs':
-                for heuristic in ['h1', 'h2', 'h3', 'h4']:
+                for heuristic in heuristics:
                     puzzle_copy = copy.deepcopy(puzzle)
                     min_path_length, closed = greedy_bfs(puzzle_copy, heuristic)
                     write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
                     write_search_file(closed, method, i + 1, heuristic)
             elif method == 'astar':
-                for heuristic in ['h1', 'h2', 'h3', 'h4']:
+                for heuristic in heuristics:
                     puzzle_copy = copy.deepcopy(puzzle)
                     min_path_length, closed = a_star(puzzle_copy, heuristic)
                     write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
