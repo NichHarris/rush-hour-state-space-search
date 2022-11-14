@@ -2,11 +2,11 @@ HEIGHT = WIDTH = 6
 GRID = HEIGHT * WIDTH
 class Node:
 
-    def __init__(self, parent, total_cost, car_dict, board, action):
+    def __init__(self, parent, path_cost, car_dict, board, action):
         self.parent = parent
-        self.total_cost = total_cost
+        self.path_cost = path_cost
         self.heuristic_cost = 0
-        self.cost = 1
+        self.total_cost = 0
         self.car_dict = car_dict
         self.board = board
         self.action = action
@@ -28,6 +28,10 @@ class Node:
 
     def __str__(self):
         return (f'Board: {self.board}, Move: {self.action}')
+
+    def set_heuristic_cost(self, heuristic):
+        self.heuristic_cost = heuristic
+        self.total_cost = self.path_cost + heuristic
 
     def calculate_children(self):
         children = [] # list of Nodes, each node will have updated parent (self), total cost, car_dict, board
@@ -72,7 +76,7 @@ class Node:
                         # then we return and move back up the tree
                         new_car_dict = self.car_dict.copy()
                         new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
-                        node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
+                        node = Node(self, self.path_cost + 1, new_car_dict, new_board, action)
                         return [node]
 
                     # remove car from board if at exit
@@ -82,7 +86,7 @@ class Node:
 
                     new_car_dict = self.car_dict.copy()
                     new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
-                    node = Node(self, self.total_cost + 1, new_car_dict, new_board, action)
+                    node = Node(self, self.path_cost + 1, new_car_dict, new_board, action)
                     children.append(node)
 
                     if (car_removed):
