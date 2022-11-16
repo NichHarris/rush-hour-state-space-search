@@ -12,7 +12,6 @@
 HEIGHT = WIDTH = 6
 GRID = HEIGHT * WIDTH
 class Node:
-
     def __init__(self, parent, path_cost, car_dict, board, action):
         self.parent = parent
         self.path_cost = path_cost
@@ -23,7 +22,7 @@ class Node:
         self.action = action
 
     def __lt__(self, other):
-        return self.total_cost < other.total_cost
+        return self.path_cost < other.path_cost
 
     def __key(self):
         return self.board

@@ -13,6 +13,7 @@ SOLUTIONS_PATH = 'output/solutions'
 SEARCH_PATH = 'output/search'
 HEIGHT = WIDTH = 6
 
+# format solution file
 def write_solution_file(puzzle, method, id, search_path_len, heuristic):
     output_file = f'{SOLUTIONS_PATH}/{method}-sol-{id}.txt'
     if heuristic != '':
@@ -22,27 +23,28 @@ def write_solution_file(puzzle, method, id, search_path_len, heuristic):
         os.makedirs(SOLUTIONS_PATH)
 
     with open(output_file, 'w') as file:
+        # check if solution exists
         if puzzle.solution_node is not None:
             solution_len, formated_path, fuel_list = display_solution_path(puzzle.solution_node)
             file.write(f'Initial board configuration: {puzzle.board}\n\n')
             file.writelines(output_file_board(puzzle.board))
             file.write(f'\nCar fuel available: {format_fuel_list(puzzle.car_dict)}\n\n')
-            file.write(f'Runtime: {puzzle.runtime}\n') # todo get runtime val
-            file.write(f'Search path length: {search_path_len}\n') # todo get search path length
-            file.write(f'Solution path length: {solution_len}\n') # todo get solution path length
-            file.write(f'Solution path: {format_solution_path(puzzle.solution_node)}\n\n') # todo get solution path
-            file.writelines(formated_path) # todo pass solution path
+            file.write(f'Runtime: {puzzle.runtime}\n') 
+            file.write(f'Search path length: {search_path_len}\n') 
+            file.write(f'Solution path length: {solution_len}\n') 
+            file.write(f'Solution path: {format_solution_path(puzzle.solution_node)}\n\n')
+            file.writelines(formated_path)
             file.write(f'\n\n! {fuel_list}\n')
-            file.writelines(f'{output_file_board(puzzle.solution_node.board)}') # todo pass final grid
+            file.writelines(f'{output_file_board(puzzle.solution_node.board)}')
         else:
             file.write(f'Initial board configuration: {puzzle.board}\n\n')
             file.writelines(output_file_board(puzzle.board))
             file.write(f'\nCar fuel available: {format_fuel_list(puzzle.car_dict)}\n\n')
             file.write('Sorry, could not solve the puzzle as specified.\nError: no solution found\n\n')
-            file.write(f'Runtime: {puzzle.runtime}\n') # todo get runtime val
+            file.write(f'Runtime: {puzzle.runtime}\n')
 
+# format search file
 def write_search_file(closed, method, id, heuristic):
-
     f_n = 0
     g_n = 0
     h_n = 0
@@ -54,27 +56,21 @@ def write_search_file(closed, method, id, heuristic):
         
     start = search_path.pop(0)
 
+    # sort search path
     if method == 'astar':
         f_n = start.total_cost
         g_n = start.path_cost
         h_n = start.heuristic_cost
+        search_path.sort(key=lambda x: x.total_cost)
     elif method == 'gbfs':
         f_n = h_n = start.heuristic_cost
+        search_path.sort(key=lambda x: x.heuristic_cost)
     elif method == 'ucs':
         f_n = g_n = start.path_cost
+        search_path.sort(key=lambda x: x.path_cost)
 
     ret.append(f'{f_n:>2} {g_n:>2} {h_n:>2} {start.board}')
 
-    # sort search path
-    if method == 'gbfs':
-        search_path.sort(key=lambda x: x.heuristic_cost)
-    elif method == 'astar':
-        search_path.sort(key=lambda x: x.total_cost)
-    elif method == 'ucs':
-        search_path.sort(key=lambda x: x.path_cost)
-
-
-    # sort search path
     for node in search_path:
         board = node.board
         car_dict = node.car_dict
@@ -117,6 +113,7 @@ def format_solution_path(node):
 
     return '; '.join(ret[::-1])
 
+# for outputing to output files
 def format_fuel_list(car_dict):
     ret = ''
 
@@ -125,6 +122,7 @@ def format_fuel_list(car_dict):
 
     return ret
 
+# for outputing to output files
 def display_solution_path(node):
 
     solution_path = []
@@ -163,6 +161,7 @@ def output_file_board(board):
     return ret
 
 # get a dict of all the cars and their sizes
+# dict= {car: (size, start_index, fuel, orientation, is_removed)}
 def get_car_dict(board, fuel_list):
     car_dict = {}
     for i, car in enumerate(board):
@@ -176,6 +175,7 @@ def get_car_dict(board, fuel_list):
         car_dict[car] = (1, i, get_fuel(car, fuel_list), get_orientation(car, i, board), False)
     return car_dict
 
+# get fuel for car from input list
 def get_fuel(car, fuel_list):
     for fuel in fuel_list:
         if car == fuel[0]:
@@ -183,6 +183,7 @@ def get_fuel(car, fuel_list):
 
     return 100
 
+# get orientation of car from board
 def get_orientation(car, index, grid):
     orientation = 'v'
 
@@ -195,6 +196,8 @@ def get_orientation(car, index, grid):
 
     return orientation
 
+# move up from solution node to start node
+# return list of actions
 def get_solution_path(node):
     actions = []
 
@@ -205,6 +208,20 @@ def get_solution_path(node):
 
     return actions[::-1]
 
+# perform UCS:
+# 1. get start node
+# 2. add start node to open list
+# 3. while open list is not empty:
+#     a. get node with lowest path cost
+#     b. ignore nodes with current costs higher than best cost
+#     d. if node is in closed list, ignore
+#     e. if node is in open list:
+#         i. if node has lower path cost, replace node in open list
+#         ii. else, ignore: there is a better path in the open list already
+#     c. if node is a better solution, replace best solution
+#     f. expand node into children (possible moves)
+#     g. if child not in closed list, add to open list
+# 4. return closed list
 def uniform_cost_search(puzzle):
     # start timer
     start_time = time.time()
@@ -266,6 +283,18 @@ def uniform_cost_search(puzzle):
 
     return min_path_length, closed
 
+# perform GBFS:
+# 1. get start node and calculate heuristics
+# 2. add start node to open list
+# 3. while open list is not empty:
+#     a. get node with lowest heuristic cost
+#     b. if node is in closed list, ignore
+#     c. if node is in open list, ignore
+#     d. if node is a better solution, replace best solution
+#     e. expand node into children (possible moves), calculate heuristics
+#     f. if child not in closed list, add to open list
+#     g. if child in open, ignore 
+# 4. return closed list
 def greedy_bfs(puzzle, heuristic):
     # start timer
     start_time = time.time()
@@ -330,6 +359,17 @@ def greedy_bfs(puzzle, heuristic):
 
     return min_path_length, closed
 
+# perform A* (h is not monotonic):
+# 1. get start node and calculate heuristics
+# 2. add start node to open list
+# 3. while open list is not empty:
+#     a. get node with lowest total cost (g_n + h_n)
+#     b. if node is in closed list:
+#         i. if node has lower total cost, remove version from closed list, place node in open list
+#     c. if node is in open list: replace with node
+#     d. if node is a better solution, replace best solution
+#     e. expand node into children (possible moves), calculate heuristics
+# 4. return closed list
 def a_star(puzzle, heuristic):
     # start timer
     start_time = time.time()
@@ -354,7 +394,7 @@ def a_star(puzzle, heuristic):
         # ignore cases where solution is lower than current path cost
         # checking further paths will only lead to higher costs
         if puzzle.solution_node is not None:
-            if curr_node.total_cost > puzzle.solution_node.total_cost:
+            if curr_node.total_cost >= puzzle.solution_node.total_cost:
                 closed[curr_node] = total_cost
                 continue
         
@@ -414,10 +454,11 @@ def goal_reached(puzzle, child, min_path_length):
             car = action[1][0]
             fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
             solution_path.append(action[1])
-        puzzle.set_solution_node(child)
+        puzzle.solution_node = child
 
     return solution_path, min_path_length
 
+# check if node is in the open list
 def check_in_open(open, node):
     for i, check in enumerate(open.queue):
         if check[1].board == node.board:
@@ -447,7 +488,7 @@ if __name__ == '__main__':
     for test_case in test_cases:
         board = test_case[0]
         car_dict = get_car_dict(board, test_case[1:])
-        puzzle_list.append(Puzzle(board, test_case, car_dict))
+        puzzle_list.append(Puzzle(board, car_dict))
 
     # solve the puzzles
     methods = ['ucs', 'gbfs', 'astar']
