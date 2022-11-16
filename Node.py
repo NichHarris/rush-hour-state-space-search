@@ -12,7 +12,6 @@
 HEIGHT = WIDTH = 6
 GRID = HEIGHT * WIDTH
 class Node:
-
     def __init__(self, parent, path_cost, car_dict, board, action):
         self.parent = parent
         self.path_cost = path_cost
@@ -21,9 +20,11 @@ class Node:
         self.car_dict = car_dict
         self.board = board
         self.action = action
+        self.cost = 0
 
+    # used by PriorityQueue to determine which node to pop
     def __lt__(self, other):
-        return self.total_cost < other.total_cost
+        return self.cost < other.cost
 
     def __key(self):
         return self.board

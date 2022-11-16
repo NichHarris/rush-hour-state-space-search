@@ -13,6 +13,7 @@ SOLUTIONS_PATH = 'output/solutions'
 SEARCH_PATH = 'output/search'
 HEIGHT = WIDTH = 6
 
+# format solution file
 def write_solution_file(puzzle, method, id, search_path_len, heuristic):
     output_file = f'{SOLUTIONS_PATH}/{method}-sol-{id}.txt'
     if heuristic != '':
@@ -22,27 +23,28 @@ def write_solution_file(puzzle, method, id, search_path_len, heuristic):
         os.makedirs(SOLUTIONS_PATH)
 
     with open(output_file, 'w') as file:
+        # check if solution exists
         if puzzle.solution_node is not None:
             solution_len, formated_path, fuel_list = display_solution_path(puzzle.solution_node)
             file.write(f'Initial board configuration: {puzzle.board}\n\n')
             file.writelines(output_file_board(puzzle.board))
             file.write(f'\nCar fuel available: {format_fuel_list(puzzle.car_dict)}\n\n')
-            file.write(f'Runtime: {puzzle.runtime}\n') # todo get runtime val
-            file.write(f'Search path length: {search_path_len}\n') # todo get search path length
-            file.write(f'Solution path length: {solution_len}\n') # todo get solution path length
-            file.write(f'Solution path: {format_solution_path(puzzle.solution_node)}\n\n') # todo get solution path
-            file.writelines(formated_path) # todo pass solution path
+            file.write(f'Runtime: {puzzle.runtime}\n') 
+            file.write(f'Search path length: {search_path_len}\n')
+            file.write(f'Solution path length: {solution_len}\n')
+            file.write(f'Solution path: {format_solution_path(puzzle.solution_node)}\n\n') 
+            file.writelines(formated_path)
             file.write(f'\n\n! {fuel_list}\n')
-            file.writelines(f'{output_file_board(puzzle.solution_node.board)}') # todo pass final grid
+            file.writelines(f'{output_file_board(puzzle.solution_node.board)}')
         else:
             file.write(f'Initial board configuration: {puzzle.board}\n\n')
             file.writelines(output_file_board(puzzle.board))
             file.write(f'\nCar fuel available: {format_fuel_list(puzzle.car_dict)}\n\n')
             file.write('Sorry, could not solve the puzzle as specified.\nError: no solution found\n\n')
-            file.write(f'Runtime: {puzzle.runtime}\n') # todo get runtime val
+            file.write(f'Runtime: {puzzle.runtime}\n')
 
+# format search file
 def write_search_file(closed, method, id, heuristic):
-
     f_n = 0
     g_n = 0
     h_n = 0
@@ -54,27 +56,22 @@ def write_search_file(closed, method, id, heuristic):
         
     start = search_path.pop(0)
 
+    # get values and sort search path
     if method == 'astar':
         f_n = start.total_cost
         g_n = start.path_cost
         h_n = start.heuristic_cost
+        search_path.sort(key=lambda x: x.total_cost)
     elif method == 'gbfs':
         f_n = h_n = start.heuristic_cost
+        search_path.sort(key=lambda x: x.heuristic_cost)
     elif method == 'ucs':
         f_n = g_n = start.path_cost
+        search_path.sort(key=lambda x: x.path_cost)
 
     ret.append(f'{f_n:>2} {g_n:>2} {h_n:>2} {start.board}')
 
-    # sort search path
-    if method == 'gbfs':
-        search_path.sort(key=lambda x: x.heuristic_cost)
-    elif method == 'astar':
-        search_path.sort(key=lambda x: x.total_cost)
-    elif method == 'ucs':
-        search_path.sort(key=lambda x: x.path_cost)
-
-
-    # sort search path
+    # search path
     for node in search_path:
         board = node.board
         car_dict = node.car_dict
@@ -117,6 +114,7 @@ def format_solution_path(node):
 
     return '; '.join(ret[::-1])
 
+# for outputing to output file
 def format_fuel_list(car_dict):
     ret = ''
 
@@ -125,11 +123,12 @@ def format_fuel_list(car_dict):
 
     return ret
 
+# for outputing to output file
 def display_solution_path(node):
-
     solution_path = []
     ret = []
     count = 0
+
     while node.parent is not None:
         count += 1
         solution_path.append([node.action, node.board, node.car_dict])
@@ -163,6 +162,7 @@ def output_file_board(board):
     return ret
 
 # get a dict of all the cars and their sizes
+# dict= {car: (size, start_index, fuel, orientation, is_removed)}
 def get_car_dict(board, fuel_list):
     car_dict = {}
     for i, car in enumerate(board):
@@ -176,6 +176,7 @@ def get_car_dict(board, fuel_list):
         car_dict[car] = (1, i, get_fuel(car, fuel_list), get_orientation(car, i, board), False)
     return car_dict
 
+# get fuel for car from input list
 def get_fuel(car, fuel_list):
     for fuel in fuel_list:
         if car == fuel[0]:
@@ -183,6 +184,7 @@ def get_fuel(car, fuel_list):
 
     return 100
 
+# get orientation of car from board
 def get_orientation(car, index, grid):
     orientation = 'v'
 
@@ -195,6 +197,8 @@ def get_orientation(car, index, grid):
 
     return orientation
 
+# move up from solution node to start node
+# return list of actions
 def get_solution_path(node):
     actions = []
 
@@ -205,6 +209,20 @@ def get_solution_path(node):
 
     return actions[::-1]
 
+# perform UCS:
+# 1. get start node
+# 2. add start node to open list
+# 3. while open list is not empty:
+#     a. get node with lowest path cost
+#     b. ignore nodes with current costs higher than best cost
+#     d. if node is in closed list, ignore
+#     e. if node is in open list:
+#         i. if node has lower path cost, replace node in open list
+#         ii. else, ignore: there is a better path in the open list already
+#     c. if node is a better solution, replace best solution
+#     f. expand node into children (possible moves)
+#     g. if child not in closed list, add to open list
+# 4. return closed list
 def uniform_cost_search(puzzle):
     # start timer
     start_time = time.time()
@@ -213,21 +231,20 @@ def uniform_cost_search(puzzle):
 
     # open queue
     open = PriorityQueue()
-    min_path_length = float('inf')
 
     # start condition
     start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
-    open.put((0, start))
+    open.put(start)
 
     while not open.empty():
-        path_cost, curr_node = open.get(block=False)
+        curr_node = open.get(block=False)
         in_open, index = check_in_open(open, curr_node)
 
         # ignore cases where solution is lower than current path cost
         # checking further paths will only lead to higher costs
         if puzzle.solution_node is not None:
             if curr_node.path_cost >= puzzle.solution_node.path_cost:
-                closed[curr_node] = path_cost
+                closed[curr_node] = curr_node.path_cost
                 continue
         
         if curr_node in closed:
@@ -235,37 +252,50 @@ def uniform_cost_search(puzzle):
             continue
         elif in_open:
             # we skip since it's already in open, replace if it's a better path
-            if path_cost < open.queue[index][0]:
-                open.queue[index] = (path_cost, curr_node)
+            if curr_node.path_cost < open.queue[index].path_cost:
+                open.queue.pop(index) 
+                open.put(curr_node)
             continue
         elif puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
-                if path_cost < puzzle.solution_node.path_cost:
+                if curr_node.path_cost < puzzle.solution_node.path_cost:
                     puzzle.solution_node = curr_node
-                    closed[curr_node] = path_cost
-                    continue
+                    closed[curr_node] = curr_node.path_cost
             else:
                 puzzle.solution_node = curr_node
-                closed[curr_node] = path_cost
-                continue
+                closed[curr_node] = curr_node.path_cost
             continue
         else:
-            closed[curr_node] = path_cost
+            closed[curr_node] = curr_node.path_cost
             children = curr_node.calculate_children()
             
             for child in children:
+                child.cost = child.path_cost
                 if child in closed:
+                    # we found a better path to the child, remove from closed list
                     if child.path_cost < closed[child]:
                         closed.pop(child)
                     else:
                         continue
 
-                open.put((child.path_cost, child))
+                open.put(child)
     puzzle.runtime = time.time() - start_time
 
-    return min_path_length, closed
+    return closed
 
+# perform GBFS:
+# 1. get start node and calculate heuristics
+# 2. add start node to open list
+# 3. while open list is not empty:
+#     a. get node with lowest heuristic cost
+#     b. if node is in closed list, ignore
+#     c. if node is in open list, ignore
+#     d. if node is a better solution, replace best solution
+#     e. expand node into children (possible moves), calculate heuristics
+#     f. if child not in closed list, add to open list
+#     g. if child in open, ignore 
+# 4. return closed list
 def greedy_bfs(puzzle, heuristic):
     # start timer
     start_time = time.time()
@@ -274,62 +304,89 @@ def greedy_bfs(puzzle, heuristic):
 
     # open queue
     open = PriorityQueue()
-    min_path_length = float('inf')
 
     heuristics = Heuristics(puzzle.board, puzzle.car_dict)
     # start condition
     start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
     hcost = eval(f'heuristics.perform_{heuristic}()')
     start.set_heuristic_cost(hcost)
-    open.put((0, start))
+    start.heuristic_cost = start.heuristic_cost
+    open.put(start)
 
     while not open.empty():
-        heuristic_cost, curr_node = open.get(block=False)
+        curr_node = open.get(block=False)
 
+        in_open, index = check_in_open(open, curr_node)
+
+        skip = False
         # ignore cases where solution is lower than current path cost
         # checking further paths will only lead to higher costs
         if puzzle.solution_node is not None:
-            if curr_node.heuristic_cost >= puzzle.solution_node.heuristic_cost:
-                closed[curr_node] = heuristic_cost
+            if curr_node.cost >= puzzle.solution_node.cost:
+                closed[curr_node] = curr_node.heuristic_cost
                 continue
         
         if curr_node in closed:
             # we skip since it's already in closed
             continue
-        elif puzzle.is_goal(curr_node.board):
+        elif in_open:
+            # we skip since it's already in open
+            continue
+        
+        if puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
-                if curr_node.path_cost < puzzle.solution_node.path_cost:
+                if curr_node.heuristic_cost < puzzle.solution_node.heuristic_cost:
                     puzzle.solution_node = curr_node
-                    closed[curr_node] = curr_node.heuristic_cost
-                    continue
+                    # closed[curr_node] = curr_node.heuristic_cost
             else:
-                solution_path, min_path_length = goal_reached(puzzle, curr_node, min_path_length)
-                puzzle.solution_path = solution_path
                 puzzle.solution_node = curr_node
+                # closed[curr_node] = curr_node.heuristic_cost
             continue
         else:
-            closed[curr_node] = heuristic_cost
+            closed[curr_node] = curr_node.heuristic_cost
             children = curr_node.calculate_children()
         
             for child in children:
                 heuristics = Heuristics(child.board, child.car_dict)
                 hcost = eval(f'heuristics.perform_{heuristic}()')
                 child.set_heuristic_cost(hcost)
-                in_open, index = check_in_open(open, child)
-                if child in closed:
-                    if child.path_cost < closed[child]:
-                        closed.pop(child)
+                child.cost = child.heuristic_cost
+                if puzzle.is_goal(child.board):
+                    if puzzle.solution_node != None:
+                        # we found a new minimum path length
+                        if child.heuristic_cost < puzzle.solution_node.heuristic_cost:
+                            puzzle.solution_node = child
+                            closed[child] = child.heuristic_cost
                     else:
-                        continue
-                elif in_open:
+                        puzzle.solution_node = child
+                        closed[child] = child.heuristic_cost
                     continue
 
-                open.put((child.heuristic_cost, child))
+                in_open, index = check_in_open(open, child)
+                if child in closed:
+                    # we skip since it's already in closed
+                    continue
+                elif in_open:
+                    # we skip since it's already in open
+                    continue
+                
+                open.put(child)
     puzzle.runtime = time.time() - start_time
 
-    return min_path_length, closed
+    return closed
 
+# perform A* (h is not monotonic):
+# 1. get start node and calculate heuristics
+# 2. add start node to open list
+# 3. while open list is not empty:
+#     a. get node with lowest total cost (g_n + h_n)
+#     b. if node is in closed list:
+#         i. if node has lower total cost, remove version from closed list, place node in open list
+#     c. if node is in open list: replace with node
+#     d. if node is a better solution, replace best solution
+#     e. expand node into children (possible moves), calculate heuristics
+# 4. return closed list
 def a_star(puzzle, heuristic):
     # start timer
     start_time = time.time()
@@ -338,70 +395,63 @@ def a_star(puzzle, heuristic):
 
     # open queue
     open = PriorityQueue()
-    min_path_length = float('inf')
 
     heuristics = Heuristics(puzzle.board, puzzle.car_dict)
     # start condition
     start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
     hcost = eval(f'heuristics.perform_{heuristic}()')
     start.set_heuristic_cost(hcost)
-    open.put((0, start))
+    start.cost = start.total_cost
+    open.put(start)
 
     while not open.empty():
-        total_cost, curr_node = open.get(block=False)
-        in_open, index = check_in_open(open, curr_node)
-
+        curr_node = open.get(block=False)
+        
+        skip = False
         # ignore cases where solution is lower than current path cost
         # checking further paths will only lead to higher costs
         if puzzle.solution_node is not None:
             if curr_node.total_cost > puzzle.solution_node.total_cost:
-                closed[curr_node] = total_cost
+                closed[curr_node] = curr_node.total_cost
                 continue
         
         if curr_node in closed:
-            continue
-        elif in_open:
-            if total_cost < open.queue[index][0]:
-                open.queue[index] = (total_cost, curr_node)
-            continue
-        elif puzzle.is_goal(curr_node.board):
+            if curr_node.total_cost < closed[curr_node]:
+                closed.pop(curr_node)
+                open.put(curr_node)
+            skip = True
+
+        in_open, index = check_in_open(open, curr_node)
+        if in_open:
+            open.queue.pop(index)
+            open.put(curr_node)
+            skip = True
+        
+        if puzzle.is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
-                if curr_node.path_cost < puzzle.solution_node.path_cost:
+                if curr_node.total_cost < puzzle.solution_node.total_cost:
                     puzzle.solution_node = curr_node
-                    closed[curr_node] = curr_node.total_cost
-                    continue
+                    # closed[curr_node] = curr_node.total_cost
             else:
-                solution_path, min_path_length = goal_reached(puzzle, curr_node, min_path_length)
-                puzzle.solution_path = solution_path
                 puzzle.solution_node = curr_node
+                # closed[curr_node] = curr_node.total_cost
             continue
-        else:
-            closed[curr_node] = total_cost
+        
+        if not skip:
+            closed[curr_node] = curr_node.total_cost
             children = curr_node.calculate_children()
         
             for child in children:
-                heuristics = Heuristics(child.board, child.car_dict)
-                hcost = eval(f'heuristics.perform_{heuristic}()')
+                hcost = eval(f'Heuristics(child.board, child.car_dict).perform_{heuristic}()')
                 child.set_heuristic_cost(hcost)
-
-                in_open, index = check_in_open(open, child)
-                if child in closed:
-                    if closed[child] > child.total_cost:
-                        # resuscitate node
-                        closed.pop(child)
-                    else:
-                        continue
-
-                if in_open:
-                    if child.total_cost < open.queue[index][0]:
-                        open.queue.pop(index)
-
-                open.put((child.total_cost, child))
+                child.cost = child.total_cost
+                open.put(child)
 
     puzzle.runtime = time.time() - start_time
-    return min_path_length, closed
+    return closed
 
+# if the goal is reached, we return the solution path and the minimum path length
 def goal_reached(puzzle, child, min_path_length):
     actions = get_solution_path(child)
     solution_path_length = len(actions)
@@ -418,12 +468,21 @@ def goal_reached(puzzle, child, min_path_length):
 
     return solution_path, min_path_length
 
+# check if node is in the open list
 def check_in_open(open, node):
     for i, check in enumerate(open.queue):
-        if check[1].board == node.board:
+        if check.board == node.board:
             return True, i
 
     return False, None
+
+def write_to_spreadsheet(output_file, puzzle, number, method, heuristic, closed):
+    if heuristic == '':
+        heuristic = 'NA'
+
+    with open (output_file, 'a') as file:
+        file.write(f'{number:<12}\t  {method:<9}\t  {heuristic:<9}\t {0:<22}\t {len(closed):<22} {puzzle.runtime:<7}')
+        exit()
 
 if __name__ == '__main__':
     # parse through the arguments
@@ -432,13 +491,16 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     input_file = f'{INPUT_FILE_PATH}/{args.file}'
-    
+
     test_cases = []
     # read the file
     with open(input_file, 'r') as file:
         for line in file.readlines():
+            if line.strip() == '':
+                continue
+            
             tokens = line.strip().split(' ')
-            if tokens[0] == '#' or tokens[0] == '':
+            if tokens[0][0] == '#':
                 continue
             test_cases.append(tokens)
 
@@ -447,30 +509,55 @@ if __name__ == '__main__':
     for test_case in test_cases:
         board = test_case[0]
         car_dict = get_car_dict(board, test_case[1:])
-        puzzle_list.append(Puzzle(board, test_case, car_dict))
+        puzzle_list.append(Puzzle(board, car_dict))
 
     # solve the puzzles
     methods = ['ucs', 'gbfs', 'astar']
     heuristics = ['h1', 'h2', 'h3', 'h4']
-    for method in methods:
-        for i, puzzle in enumerate(puzzle_list):
-            if method == 'ucs':
-                puzzle_copy = copy.deepcopy(puzzle)
-                min_path_length, closed = uniform_cost_search(puzzle_copy)            
-                write_solution_file(puzzle_copy, method, i + 1, len(closed), '')
-                write_search_file(closed, method, i + 1, '')
+    # heuristics = ['h1']
+    if input_file == f'{INPUT_FILE_PATH}/sample-input.txt':
+        for method in methods:
+            for i, puzzle in enumerate(puzzle_list):
+                # if method == 'ucs':
+                #     puzzle_copy = copy.deepcopy(puzzle)
+                #     closed = uniform_cost_search(puzzle_copy)            
+                #     write_solution_file(puzzle_copy, method, i + 1, len(closed), '')
+                #     write_search_file(closed, method, i + 1, '')
+                # elif method == 'gbfs':
+                if method == 'gbfs':
+                    for heuristic in heuristics:
+                        puzzle_copy = copy.deepcopy(puzzle)
+                        closed = greedy_bfs(puzzle_copy, heuristic)
+                        write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
+                        write_search_file(closed, method, i + 1, heuristic)
+                # elif method == 'astar':
+                # if method == 'astar':
+                #     for heuristic in heuristics:
+                #         puzzle_copy = copy.deepcopy(puzzle)
+                #         closed = a_star(puzzle_copy, heuristic)
+                #         write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
+                #         write_search_file(closed, method, i + 1, heuristic)
+    else:
+        output_file = 'output/random'
+        if not os.path.exists(output_file):
+            os.makedirs(output_file)
+        output_file = f'{output_file}/output.txt'
+        with open (output_file, 'w') as file:
+            file.write('Puzzle Number\t Algorithm\t Heuristic\t Solution Length\t Search\t Path Length\t Runtime\n')
+        for method in methods:
+            for i, puzzle in enumerate(puzzle_list):
 
-            elif method == 'gbfs':
-                for heuristic in heuristics:
+                if method == 'ucs':
                     puzzle_copy = copy.deepcopy(puzzle)
-                    min_path_length, closed = greedy_bfs(puzzle_copy, heuristic)
-                    write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
-                    write_search_file(closed, method, i + 1, heuristic)
-            elif method == 'astar':
-                for heuristic in heuristics:
-                    puzzle_copy = copy.deepcopy(puzzle)
-                    min_path_length, closed = a_star(puzzle_copy, heuristic)
-                    write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
-                    write_search_file(closed, method, i + 1, heuristic)
-                    # exit()
-                continue
+                    closed = uniform_cost_search(puzzle_copy)            
+                    write_to_spreadsheet(output_file, puzzle, i+1, method, '', closed)
+                elif method == 'gbfs':
+                    for heuristic in heuristics:
+                        puzzle_copy = copy.deepcopy(puzzle)
+                        closed = greedy_bfs(puzzle_copy, heuristic)
+                        write_to_spreadsheet(output_file, puzzle, i+1, method, heuristic, closed)
+                elif method == 'astar':
+                    for heuristic in heuristics:
+                        puzzle_copy = copy.deepcopy(puzzle)
+                        closed = a_star(puzzle_copy, heuristic)
+                        write_to_spreadsheet(output_file, puzzle, i+1, method, heuristic, closed)

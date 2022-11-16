@@ -5,22 +5,8 @@
 # demo 1.1
 BBIJ....IJCC..IAAMGDDK.MGH.KL.GHFFL. 
 
-# BBIJ..
-# ..IJCC
-# ..IAAM
-# GDDK.M
-# GH.KL.
-# GHFFL. 
-
 # demo 1.2
 ..I...BBI.K.GHAAKLGHDDKLG..JEEFF.J.. 
-
-# ..I...
-# BBI.K.
-# GHAAKL
-# GHDDKL
-# G..JEE
-# FF.J.. 
 
 # demo 1.3
 JBBCCCJDD..MJAAL.MFFKL.N..KGGN.HH... 
