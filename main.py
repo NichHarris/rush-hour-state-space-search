@@ -11,7 +11,25 @@ import copy
 INPUT_FILE_PATH = 'input'
 SOLUTIONS_PATH = 'output/solutions'
 SEARCH_PATH = 'output/search'
+ANALYSIS_FILE_PATH = 'output/analysis.txt'
 HEIGHT = WIDTH = 6
+
+def write_analysis_file(puzzle, method, heuristic, id, search_path_len):
+    output_file = f'output/analysis.txt'
+    if not os.path.exists('output'):
+        os.makedirs('output')
+    
+    if not os.path.exists(output_file):
+        with open(output_file, 'w') as file:
+            file.write(f'Puzzle Number\t Algorithm\t Heuristic\t Solution Length\t Search Length\t Runtime\n')
+    
+    with open(output_file, 'a') as file:
+        solution_node = ''
+        if puzzle.solution_node is None:
+            solution_node = 'None'
+        else:
+            solution_node = puzzle.solution_node.path_cost
+        file.write(f'{id:<13}\t {method.upper():<9}\t {heuristic:<9}\t {solution_node:<15}\t {search_path_len:<13}\t {puzzle.runtime:<7}\n')
 
 # format solution file
 def write_solution_file(puzzle, method, id, search_path_len, heuristic):
@@ -470,9 +488,12 @@ if __name__ == '__main__':
     # parse through the arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', '-f', type=str, default='sample-input.txt')
+    # add boolean parser argument
+    parser.add_argument('--analysis', '-a', action='store_true')
 
     args = parser.parse_args()
     input_file = f'{INPUT_FILE_PATH}/{args.file}'
+    analysis = args.analysis
     
     test_cases = []
     # read the file
@@ -493,25 +514,32 @@ if __name__ == '__main__':
     # solve the puzzles
     methods = ['ucs', 'gbfs', 'astar']
     heuristics = ['h1', 'h2', 'h3', 'h4']
-    for method in methods:
-        for i, puzzle in enumerate(puzzle_list):
+    for i, puzzle in enumerate(puzzle_list):
+        for method in methods:
             if method == 'ucs':
                 puzzle_copy = copy.deepcopy(puzzle)
-                min_path_length, closed = uniform_cost_search(puzzle_copy)            
-                write_solution_file(puzzle_copy, method, i + 1, len(closed), '')
-                write_search_file(closed, method, i + 1, '')
-
+                min_path_length, closed = uniform_cost_search(puzzle_copy)
+                if not analysis:       
+                    write_solution_file(puzzle_copy, method, i + 1, len(closed), '')
+                    write_search_file(closed, method, i + 1, '')
+                else:
+                    write_analysis_file(puzzle_copy, method, 'NA', i+1, len(closed))
             elif method == 'gbfs':
                 for heuristic in heuristics:
                     puzzle_copy = copy.deepcopy(puzzle)
                     min_path_length, closed = greedy_bfs(puzzle_copy, heuristic)
-                    write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
-                    write_search_file(closed, method, i + 1, heuristic)
+                    if not analysis:     
+                        write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
+                        write_search_file(closed, method, i + 1, heuristic)
+                    else:
+                        write_analysis_file(puzzle_copy, method, heuristic, i+1, len(closed))
             elif method == 'astar':
                 for heuristic in heuristics:
                     puzzle_copy = copy.deepcopy(puzzle)
                     min_path_length, closed = a_star(puzzle_copy, heuristic)
-                    write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
-                    write_search_file(closed, method, i + 1, heuristic)
-                    # exit()
+                    if not analysis:      
+                        write_solution_file(puzzle_copy, method, i + 1, len(closed), heuristic)
+                        write_search_file(closed, method, i + 1, heuristic)
+                    else:
+                        write_analysis_file(puzzle_copy, method, heuristic, i+1, len(closed))
                 continue
