@@ -2,27 +2,26 @@
 Repository Link: https://github.com/NichHarris/rush-hour-state-space-search
 
 COMP 472 - Mini Project 2
-# Setup guide:
+## Running program
 
-## Setting up virtual environment
-Ensure you Python version is either 3.8+ and 64-bit
-
-### For macOS/linux:
-
+Options Available:
 ```
-pip3 install venv
-python -m venv comp472
-source comp472/bin/activate
-pip3 install -r requirements.txt
+options:
+  -h, --help            show this help message and exit
+  --file FILE, -f FILE
+  --analysis, -a
 ```
 
-### For Windows:
+The options ``` -a, --analysis``` is used to run the program in analysis mode
+This will create an analysis output file where the format is:
+```Puzzle Number	 Algorithm	 Heuristic	 Solution Length	 Search Length	 Runtime```
 
+Run to generate analysis file
 ```
-pip install venv
-python -m venv comp472
-comp472/Scripts/activate
-pip install -r requirements.txt
+python main.py -a -f {input_file_name}.txt
 ```
 
-## Running program TODO
+Run to generate solution and search files
+```
+python main.py -f {input_file_name}.txt
+```
