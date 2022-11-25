@@ -397,7 +397,7 @@ def a_star(puzzle, heuristic):
     start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
     hcost = eval(f'heuristics.perform_{heuristic}()')
     start.set_heuristic_cost(hcost)
-    open.put((0, start))
+    open.put((start.total_cost, start))
 
     while not open.empty():
         total_cost, curr_node = open.get(block=False)
@@ -406,7 +406,7 @@ def a_star(puzzle, heuristic):
         # ignore cases where solution is lower than current path cost
         # checking further paths will only lead to higher costs
         if puzzle.solution_node is not None:
-            if curr_node.total_cost >= puzzle.solution_node.total_cost:
+            if curr_node.path_cost >= puzzle.solution_node.path_cost:
                 closed[curr_node] = total_cost
                 continue
         
