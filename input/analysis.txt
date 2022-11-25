@@ -34,3 +34,10 @@ BBBEFG..CEFGAAC.FH..D..H..D..H..D.II D2 B4
 G...B.GFFFB.G.AAC.HHIEC...IEDD...E..
 ..FFFB...G.BAA.G.B...CCC.H.DEE.H.D..
 ..GFFF..G...AA...EB....EBCCCDD......
+..GFFF..G...AAG..EB....EBCCCDD......
+..G..F..G..FAA...E.....EB....EB.CCDD
+JIII.FJB...FJBAA.E.L...EHL...EHLCCDD
+........C..DAACBBD..C..D............ C3 B2 A5
+IBBCD.I..CD.AAE..KFFE..K...GGK.HHLLL
+.FBBCK.F.DCKAA.DEK...JE....J.....J..
+HH.GFFB..G.DBAA..D..L..D.KLEEE.K....
