@@ -14,7 +14,7 @@ GRID = HEIGHT * WIDTH
 
 class Heuristics:
 
-    def __init__(self, board, car_dict, LAMBDA=3):
+    def __init__(self, board, car_dict, LAMBDA=2.5):
         self.board = board
         self.car_dict = car_dict
         self.LAMBDA = LAMBDA
