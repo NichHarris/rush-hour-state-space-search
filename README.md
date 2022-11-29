@@ -12,7 +12,7 @@ options:
   --analysis, -a
 ```
 
->Note: The input file to be used should be stored under the `/input` directory
+>Note: The input file to be used should be stored under the `/input` directory.\n
 >The directory does not need to be referenced when running the script, just the file name
 
 The options ``` -a, --analysis``` is used to run the program in analysis mode
