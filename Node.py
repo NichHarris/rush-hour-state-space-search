@@ -79,7 +79,6 @@ class Node:
                         continue
                     temp_fuel -= move
 
-                    # todo: check if move on a horizontal piece puts its into goal position, if it does we can remove it from the board
                     action = f'{car} {move_action} {move}'
 
                     new_board, new_index = self.update_board(self.board, move, move_direction, start, end, step)
