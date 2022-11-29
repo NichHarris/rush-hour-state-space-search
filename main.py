@@ -556,4 +556,3 @@ if __name__ == '__main__':
                         write_search_file(closed, method, i + 1, heuristic)
                     else:
                         write_analysis_file(puzzle_copy, method, heuristic, i+1, count)
-                continue

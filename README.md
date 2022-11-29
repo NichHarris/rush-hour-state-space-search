@@ -12,6 +12,9 @@ options:
   --analysis, -a
 ```
 
+>Note: The input file to be used should be stored under the `/input` directory
+>The directory does not need to be referenced when running the script, just the file name
+
 The options ``` -a, --analysis``` is used to run the program in analysis mode
 This will create an analysis output file where the format is:
 ```Puzzle Number	 Algorithm	 Heuristic	 Solution Length	 Search Length	 Runtime```
