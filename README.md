@@ -17,7 +17,7 @@ options:
 
 The options ``` -a, --analysis``` is used to run the program in analysis mode
 This will create an analysis output file where the format is:
-```Puzzle Number	 Algorithm	 Heuristic	 Solution Length	 Search Length	 Runtime```
+```Puzzle_Number	 Algorithm	 Heuristic	 Solution_Length	 Search_Length	 Runtime```
 
 Run to generate analysis file
 ```
