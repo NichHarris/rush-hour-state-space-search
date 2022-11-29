@@ -12,4 +12,4 @@ Car fuel available: B:4 M:100 C:100 D:100 A:100 K:100 L:100 J:0 E:100 G:100 H:10
 Sorry, could not solve the puzzle as specified.
 Error: no solution found
 
-Runtime: 0.01576542854309082
+Runtime: 0.023800134658813477

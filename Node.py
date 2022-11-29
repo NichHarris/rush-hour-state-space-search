@@ -48,6 +48,9 @@ class Node:
         for car in self.car_dict:
             size, index, fuel, orientation, is_removed = self.car_dict[car]
             car_removed = False
+
+            if is_removed:
+                continue
             if fuel <= 0:
                 continue
 
@@ -95,7 +98,7 @@ class Node:
                         car_removed = True
 
                     new_car_dict = self.car_dict.copy()
-                    new_car_dict[car] = (size, new_index, temp_fuel, orientation, True)
+                    new_car_dict[car] = (size, new_index, temp_fuel, orientation, car_removed)
                     node = Node(self, self.path_cost + 1, new_car_dict, new_board, action)
                     children.append(node)
 
@@ -161,9 +164,3 @@ class Node:
             else:
                 break
         return free_spaces
-    
-    def calculate_children_bfs(self):
-        # todo redo this entire section using the grid and BFS, then compare the implementation speeds
-        grid =  [[self.board[i+(j*WIDTH)] for i in range(WIDTH)] for j in range(HEIGHT)]
-
-        return []
