@@ -288,7 +288,7 @@ def uniform_cost_search(puzzle):
             continue
 
         if curr_node in closed:
-            # update parent node...
+            # update parent node if path is better...
             if curr_node.path_cost >= closed[curr_node]:
                 continue
             else:
@@ -353,7 +353,7 @@ def greedy_bfs(puzzle, heuristic):
         if is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
-                if curr_node.path_cost < puzzle.solution_node.path_cost:
+                if curr_node.heuristic_cost < puzzle.solution_node.heuristic_cost:
                     puzzle.solution_node = curr_node
                     closed[curr_node] = heuristic_cost
             else:
@@ -419,14 +419,14 @@ def a_star(puzzle, heuristic):
         if curr_node.total_cost == float('inf'):
             continue
         if puzzle.solution_node is not None:
-            if curr_node.path_cost >= puzzle.solution_node.path_cost:
+            if curr_node.total_cost >= puzzle.solution_node.total_cost:
                 closed[curr_node] = total_cost
                 continue
 
         if is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
-                if curr_node.path_cost < puzzle.solution_node.path_cost:
+                if curr_node.total_cost < puzzle.solution_node.total_cost:
                     puzzle.solution_node = curr_node
                     closed[curr_node] = curr_node.total_cost
             else:
@@ -435,11 +435,11 @@ def a_star(puzzle, heuristic):
             continue
 
         if curr_node in closed:
-            if closed[curr_node] >= curr_node.total_cost:
+            if closed[curr_node] > curr_node.total_cost:
                 # resuscitate node
                 closed.pop(curr_node)
                 open.put((curr_node.total_cost, curr_node))
-                continue
+            continue
         
         in_open, index = check_in_open(open, curr_node)
         if in_open:
@@ -456,7 +456,7 @@ def a_star(puzzle, heuristic):
                 hcost = eval(f'heuristics.perform_{heuristic}()')
                 child.set_heuristic_cost(hcost)
                 if child in closed:
-                    if closed[child] >= child.total_cost:
+                    if closed[child] > child.total_cost:
                         # resuscitate node
                         closed.pop(child)
                     else:
