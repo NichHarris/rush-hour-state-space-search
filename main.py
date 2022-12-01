@@ -331,10 +331,10 @@ def greedy_bfs(puzzle, heuristic):
     open = PriorityQueue()
     count = 0
 
-    heuristics = Heuristics(puzzle.board, puzzle.car_dict)
+    start_heuristics = Heuristics(puzzle.board, puzzle.car_dict)
     # start condition
     start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
-    hcost = eval(f'heuristics.perform_{heuristic}()')
+    hcost = eval(f'start_heuristics.perform_{heuristic}()')
     start.set_heuristic_cost(hcost)
     open.put((hcost, start))
 
@@ -343,6 +343,8 @@ def greedy_bfs(puzzle, heuristic):
 
         # ignore cases where solution is lower than current path cost
         # checking further paths will only lead to higher costs
+        if curr_node.heuristic_cost == float('inf'):
+                continue
         if puzzle.solution_node is not None:
             if curr_node.heuristic_cost >= puzzle.solution_node.heuristic_cost:
                 closed[curr_node] = heuristic_cost
@@ -402,10 +404,10 @@ def a_star(puzzle, heuristic):
     open = PriorityQueue()
     count = 0
 
-    heuristics = Heuristics(puzzle.board, puzzle.car_dict)
+    start_heuristics = Heuristics(puzzle.board, puzzle.car_dict)
     # start condition
     start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
-    hcost = eval(f'heuristics.perform_{heuristic}()')
+    hcost = eval(f'start_heuristics.perform_{heuristic}()')
     start.set_heuristic_cost(hcost)
     open.put((start.total_cost, start))
 
@@ -414,6 +416,8 @@ def a_star(puzzle, heuristic):
 
         # ignore cases where solution is lower than current path cost
         # checking further paths will only lead to higher costs
+        if curr_node.total_cost == float('inf'):
+            continue
         if puzzle.solution_node is not None:
             if curr_node.path_cost >= puzzle.solution_node.path_cost:
                 closed[curr_node] = total_cost

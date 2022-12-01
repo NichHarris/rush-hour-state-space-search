@@ -51,6 +51,19 @@ class Node:
 
             if is_removed:
                 continue
+            
+            # remove car from board if at exit
+            if self.board[17] == car and orientation == 'h':
+                new_board = self.board.replace(car, '.')
+                is_removed = True
+                
+                action = f'{car} exit 0'
+                new_car_dict = self.car_dict.copy()
+                new_car_dict[car] = (size, index, fuel, orientation, is_removed)
+                node = Node(self, self.path_cost + 1, new_car_dict, new_board, action)
+                children.append(node)
+                continue
+
             if fuel <= 0:
                 continue
 
