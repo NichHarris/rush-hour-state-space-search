@@ -9,13 +9,13 @@ import time
 import copy
 
 INPUT_FILE_PATH = 'input'
-SOLUTIONS_PATH = 'output-2/solutions'
-SEARCH_PATH = 'output-2/search'
-ANALYSIS_FILE_PATH = 'output-2/analysis.txt'
+SOLUTIONS_PATH = 'output/solutions'
+SEARCH_PATH = 'output/search'
+ANALYSIS_FILE_PATH = 'output/analysis.txt'
 HEIGHT = WIDTH = 6
 
 def write_analysis_file(puzzle, method, heuristic, id, search_path_len):
-    output_file = f'output-2/analysis.txt'
+    output_file = f'output/analysis.txt'
     
     with open(output_file, 'a') as file:
         solution_node = ''
@@ -550,9 +550,9 @@ if __name__ == '__main__':
         puzzle_list.append(Puzzle(board, car_dict))
 
     if analysis:
-        output_file = f'output-2/analysis.txt'
-        if not os.path.exists('output-2'):
-            os.makedirs('output-2')
+        output_file = f'output/analysis.txt'
+        if not os.path.exists('output'):
+            os.makedirs('output')
         
         with open(output_file, 'w') as file:
             file.write(f'Puzzle Number\t Algorithm\t Heuristic\t Solution Length\t Search Length\t Runtime\n')

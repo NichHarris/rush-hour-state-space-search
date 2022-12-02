@@ -100,9 +100,6 @@ class Heuristics:
                                 if up_car != '.':
                                     prev_block_up += 1
                                 prev_vehicle = up_car
-                        
-                        # if prev_vehicle == car_letter:
-                        #     prev_block_up = float('inf')
 
                         prev_vehicle = car_letter
                         j =  i
@@ -113,14 +110,8 @@ class Heuristics:
                                 if down_car != '.':
                                     prev_block_down += 1
                                 prev_vehicle = down_car
-                        
-                        # if prev_vehicle == car_letter:
-                        #     prev_block_down = float('inf')
 
                         blocking_cars += min(prev_block_up, prev_block_down)
                         prev_vehicle = car_letter
         
-        # for i in range(0, 31, 6):
-        #     print(self.board[i:i+6])
-        # print(blocking_cars)
         return blocking_cars
