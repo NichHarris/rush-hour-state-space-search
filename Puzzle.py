@@ -19,9 +19,3 @@ class Puzzle:
 
     def __str__(self):
         return f'Puzzle: {self.board}'
-
-    # determine if puzzle is in goal state
-    # goal state is exit contains 'AA'
-    def is_goal(self, board):
-        puzzle_exit = board[16:18]
-        return puzzle_exit == 'AA'

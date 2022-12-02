@@ -21,9 +21,11 @@ class Node:
         self.board = board
         self.action = action
 
+    # define the functionality of the < operate for the Node object
     def __lt__(self, other):
         return self.path_cost < other.path_cost
 
+    # determine what object is used to compare for hashing and equality
     def __key(self):
         return self.board
 
@@ -33,22 +35,26 @@ class Node:
             return self.__key() == other.__key()
         return NotImplemented
 
+    # define the functionality of the hashing function for the Node object
     def __hash__(self):
         return hash(self.__key())
 
     def __str__(self):
         return (f'Board: {self.board}, Move: {self.action}')
 
+    # update the heuristic and total cost of the node
     def set_heuristic_cost(self, heuristic):
         self.heuristic_cost = heuristic
         self.total_cost = self.path_cost + heuristic
 
+    # determine all possible moves from the current board state
     def calculate_children(self):
         children = [] # list of Nodes, each node will have updated parent (self), total cost, car_dict, board
         for car in self.car_dict:
             size, index, fuel, orientation, is_removed = self.car_dict[car]
             car_removed = False
 
+            # if the car has been removed during the iteration, ignore
             if is_removed:
                 continue
             
@@ -63,13 +69,16 @@ class Node:
                 node = Node(self, self.path_cost + 1, new_car_dict, new_board, action)
                 children.append(node)
                 continue
-
+            
+            # if the car has no fuel remaining, ignore
             if fuel <= 0:
                 continue
 
+            # get the spaces around the car, dependant on the orientation
             (free_spaces) = self.get_spaces(size, orientation, index)
 
-            ### Intended DIRECTIONS: DOWN = -1, UP = 1, LEFT = -1, RIGHT = 1
+            # DIRECTIONS: DOWN = -1, UP = 1, LEFT = -1, RIGHT = 1
+            # -1 equivalent to back, 1 to front
             node = None
             move_directions = (1, -1)
 
@@ -79,12 +88,14 @@ class Node:
             for free_space, move_direction in zip(free_spaces, move_directions):
                 max_dist = free_space if free_space < fuel else fuel
 
+                # determine the action based on the orientation and move direction
                 move_action = ''
                 if move_direction == 1:
                     move_action = 'down' if orientation == 'v' else 'right'
                 else:
                     move_action = 'up' if orientation == 'v' else 'left'
 
+                # determine the start and end index of ther car, and the step needed
                 start, end, step = index, HEIGHT*(size - 1) + index if orientation == 'v' else index + size - 1, HEIGHT if orientation == 'v' else 1
                 for move in range(max_dist, 0, -1):
                     temp_fuel = fuel
@@ -92,9 +103,13 @@ class Node:
                         continue
                     temp_fuel -= move
 
+                    # create the action string
                     action = f'{car} {move_action} {move}'
 
+                    # update the board
                     new_board, new_index = self.update_board(self.board, move, move_direction, start, end, step)
+
+                    # check if new board is the goal state
                     if self.is_goal(new_board):
                         # we have found the goal state
                         # we push the move to the child nodes
@@ -109,14 +124,17 @@ class Node:
                         new_board = new_board.replace(car, '.')
                         car_removed = True
 
+                    # create new node with update info
                     new_car_dict = self.car_dict.copy()
                     new_car_dict[car] = (size, new_index, temp_fuel, orientation, car_removed)
                     node = Node(self, self.path_cost + 1, new_car_dict, new_board, action)
                     children.append(node)
 
+                    # skip if car was removed
                     if (car_removed):
                         break
-
+                
+                # skip if car was removed
                 if (car_removed):
                     break
         return children
@@ -126,7 +144,11 @@ class Node:
 
         first, last = start, end
         step = step * direction
+
+        # turn board into array
         board = [*board]
+
+        # swap the car with the empty spaces
         for shift in range(move):
             if direction == 1:
                 board[first], board[last+step] = board[last+step], board[first]
@@ -135,6 +157,7 @@ class Node:
             first += step
             last += step
 
+        # turn array back into string
         board = ''.join(board)
         return board[:GRID], first
 
@@ -168,6 +191,7 @@ class Node:
                 free_spaces_back = self.get_free_spaces(left - 1, left_wall - 1, -1)
         return free_spaces_front, free_spaces_back
 
+    # count the number of free spaces in a given direction
     def get_free_spaces(self, start, end, step):
         free_spaces = 0
         for i in range(start, end, step):

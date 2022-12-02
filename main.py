@@ -19,10 +19,14 @@ def write_analysis_file(puzzle, method, heuristic, id, search_path_len):
     
     with open(output_file, 'a') as file:
         solution_node = ''
+
+        # determine if a solution exists
         if puzzle.solution_node is None:
             solution_node = 'None'
         else:
             solution_node = puzzle.solution_node.path_cost
+
+        # format and write the output line
         file.write(f'{id:<13}\t {method.upper():<9}\t {heuristic:<9}\t {solution_node:<15}\t {search_path_len:<13}\t {puzzle.runtime:<7}\n')
 
 # format solution file
@@ -63,6 +67,7 @@ def write_search_file(closed, method, id, heuristic):
 
     ret = []
     search_path = []
+    # get all the nodes within the search path
     for key in closed.keys():
         search_path.append(key)
         
@@ -88,6 +93,8 @@ def write_search_file(closed, method, id, heuristic):
         car_dict = node.car_dict
 
         fuel_list = ''
+
+        # set the path cost, heuristic cost, and total cost values
         if method == 'astar':
             f_n = node.total_cost
             g_n = node.path_cost
@@ -106,12 +113,16 @@ def write_search_file(closed, method, id, heuristic):
                 if cf == '':
                     break
 
+                # If car exists in fuel_list, replace it with new fuel
                 if cf[0] == car:
                     fuel_list = fuel_list.replace(cf, f'{car}{car_dict[car][2]}')
                     exists = True
                     break
+            # else append it to the end
             if not exists:
                 fuel_list += f'{car}{car_dict[car][2]} '
+            
+            # move up the tree
             node = node.parent
         ret.append(f'{f_n:>2} {g_n:>2} {h_n:>2} {board} {fuel_list}')
 
@@ -133,14 +144,18 @@ def format_solution_path(node):
 
     while node.parent is not None:
         ret.append(node.action)
+
+        # move up the tree
         node = node.parent
 
+    # return action list in order from start to goal
     return '; '.join(ret[::-1])
 
 # for outputing to output files
 def format_fuel_list(car_dict):
     ret = ''
 
+    # format the final fuel levels for output
     for car in car_dict:
         ret += f'{car}:{car_dict[car][2]} '
 
@@ -148,29 +163,37 @@ def format_fuel_list(car_dict):
 
 # for outputing to output files
 def display_solution_path(node):
-
     solution_path = []
     ret = []
     count = 0
+
     while node.parent is not None:
         count += 1
         solution_path.append([node.action, node.board, node.car_dict])
+
+        # move up the tree
         node = node.parent
     
+    # set order of solution path from start to goal
     solution_path = solution_path[::-1]
     car_fuel = {}
     fuel_list = ''
+    # iterate through solution path
     for path in solution_path:
         action = path[0].split(' ')
+        # fetch the current car from the action
         car = action[0]
         board = path[1]
         car_dict = path[2]
+        # assign the current car's fuel level
         car_fuel[car] = car_dict[car][2]
 
         fuel_list = ''
+        # format the fuel list based on car_fuel dict
         for cf in car_fuel:
             fuel_list += f'{cf}{car_fuel[cf]} '
         
+        # format the output line
         ret.append(f'{car}{action[1]:>6} {action[2]} \t{car_fuel[car]:>2} {board} {fuel_list}')
 
     return count, '\n'.join(ret), fuel_list
@@ -179,13 +202,14 @@ def display_solution_path(node):
 def output_file_board(board):
     ret = ''
 
+    # format board into 2d visually
     for i in range(WIDTH, WIDTH*HEIGHT + 1, WIDTH):
         ret += ' '.join(board[i-WIDTH:i]) + '\n'
 
     return ret
 
-# get a dict of all the cars and their sizes
-# dict= {car: (size, start_index, fuel, orientation, is_removed)}
+# get a dict of all the cars and their info
+# dict = {car: (size, start_index, fuel, orientation, is_removed)}
 def get_car_dict(board, fuel_list):
     car_dict = {}
     for i, car in enumerate(board):
@@ -194,17 +218,22 @@ def get_car_dict(board, fuel_list):
 
         if car in car_dict:
             size, start, fuel, orientation, is_removed = car_dict[car]
+            # increment the size of a car
             car_dict[car] = (size + 1, start, fuel, orientation, is_removed)
             continue
+        # create an initial entry for a car
         car_dict[car] = (1, i, get_fuel(car, fuel_list), get_orientation(car, i, board), False)
     return car_dict
 
 # get fuel for car from input list
 def get_fuel(car, fuel_list):
+
+    # examing if the car is present in the fuel list provided by the user
     for fuel in fuel_list:
         if car == fuel[0]:
             return int(fuel[1])
 
+    # return a fuel level of 100 if not present
     return 100
 
 # get orientation of car from board
@@ -220,7 +249,6 @@ def get_orientation(car, index, grid):
 
     return orientation
 
-# move up from solution node to start node
 # return list of actions
 def get_solution_path(node):
     actions = []
@@ -228,14 +256,17 @@ def get_solution_path(node):
     while node.parent is not None:
         action = [node.board, node.action, node.car_dict]
         actions.append(action)
+
+        # move up the tree
         node = node.parent
 
     return actions[::-1]
 
-    # determine if puzzle is in goal state
-    # goal state is exit contains 'AA'
+# determine if puzzle is in goal state
+# goal state is exit contains 'AA'
 def is_goal(board):
     puzzle_exit = board[16:18]
+
     return puzzle_exit == 'AA'
 
 # perform UCS:
@@ -334,6 +365,8 @@ def greedy_bfs(puzzle, heuristic):
     start_heuristics = Heuristics(puzzle.board, puzzle.car_dict)
     # start condition
     start = Node(None, 0, puzzle.car_dict, puzzle.board, 'start')
+
+    # evaluate the correct heuristic
     hcost = eval(f'start_heuristics.perform_{heuristic}()')
     start.set_heuristic_cost(hcost)
     open.put((hcost, start))
@@ -350,6 +383,7 @@ def greedy_bfs(puzzle, heuristic):
                 closed[curr_node] = heuristic_cost
                 continue
         
+        # check if the current node is in the goal state
         if is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
@@ -361,6 +395,7 @@ def greedy_bfs(puzzle, heuristic):
                 closed[curr_node] = heuristic_cost
             continue
 
+        # if board state is already represented in closed, ignore
         if curr_node in closed:
             continue
         in_open, index = check_in_open(open, curr_node)
@@ -373,8 +408,12 @@ def greedy_bfs(puzzle, heuristic):
 
             for child in children:
                 heuristics = Heuristics(child.board, child.car_dict)
+
+                # evaluate the correct heuristic
                 hcost = eval(f'heuristics.perform_{heuristic}()')
                 child.set_heuristic_cost(hcost)
+
+                # ignore child nodes that already exist in closed
                 if child in closed:
                     continue
 
@@ -423,6 +462,7 @@ def a_star(puzzle, heuristic):
                 closed[curr_node] = total_cost
                 continue
 
+        # check if the current node is in the goal state
         if is_goal(curr_node.board):
             if puzzle.solution_node != None:
                 # we found a new minimum path length
@@ -443,6 +483,7 @@ def a_star(puzzle, heuristic):
         
         in_open, index = check_in_open(open, curr_node)
         if in_open:
+            # replace node in open queue if a better node exists
             if total_cost < open.queue[index][0]:
                 open.queue[index] = (total_cost, curr_node)
             continue
@@ -453,8 +494,11 @@ def a_star(puzzle, heuristic):
 
             for child in children:
                 heuristics = Heuristics(child.board, child.car_dict)
+
+                # evaluate the correct heuristic
                 hcost = eval(f'heuristics.perform_{heuristic}()')
                 child.set_heuristic_cost(hcost)
+
                 if child in closed:
                     if closed[child] > child.total_cost:
                         # resuscitate node
@@ -466,22 +510,6 @@ def a_star(puzzle, heuristic):
 
     puzzle.runtime = time.time() - start_time
     return count, closed
-
-def goal_reached(puzzle, child, min_path_length):
-    actions = get_solution_path(child)
-    solution_path_length = len(actions)
-    solution_path = []
-
-    if solution_path_length < min_path_length:
-        min_path_length = solution_path_length
-        fuels = ''
-        for action in actions:
-            car = action[1][0]
-            fuels = f'{car}{action[2][car][2]}' + f' {fuels}'
-            solution_path.append(action[1])
-        puzzle.solution_node = child
-
-    return solution_path, min_path_length
 
 # check if node is in the open list
 def check_in_open(open, node):
