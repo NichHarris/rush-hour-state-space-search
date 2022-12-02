@@ -21,7 +21,8 @@ class Heuristics:
 
     # Heuristic 1: Number of blocking vehicles
     def perform_h1(self):
-        blocking_cars = {}
+        blocking_cars = 0
+        prev_vehicle = '.'
 
         # Define and search third row
         # get the index to the right of ambulance = start_index + length
@@ -29,13 +30,15 @@ class Heuristics:
         end_exit_row = int(WIDTH * HEIGHT/2 - 1)
 
         if end_ambulance - 1 == end_exit_row:
-            return len(blocking_cars)
+            return blocking_cars
 
         for i in range(end_ambulance, end_exit_row + 1):
-            if self.board[i] != '.':
-                blocking_cars[self.board[i]] = 1
+            car_letter = self.board[i]
+            if car_letter != '.' and prev_vehicle != car_letter:
+                blocking_cars += 1
+                prev_vehicle = car_letter
         
-        return len(blocking_cars)
+        return blocking_cars
     
     # Heuristic 2: Number of blocked positions
     def perform_h2(self):
@@ -61,7 +64,8 @@ class Heuristics:
 
     # Heuristic 4: return the number of blocking cars, unless the car has no fuel remaining, return infinity
     def perform_h4(self):
-        blocking_cars = {}
+        blocking_cars = 0
+        prev_vehicle = '.'
 
         # Define and search third row
         # get the index to the right of ambulance = start_index + length
@@ -69,12 +73,54 @@ class Heuristics:
         end_exit_row = int(WIDTH * HEIGHT/2 - 1)
 
         if end_ambulance - 1 == end_exit_row:
-            return len(blocking_cars)
+            return blocking_cars
 
         for i in range(end_ambulance, end_exit_row + 1):
-            if self.board[i] != '.':
-                if self.car_dict[self.board[i]][2] <= 0:
+            car_letter = self.board[i]
+            if car_letter != '.':
+                if self.car_dict[car_letter][2] <= 0:
                     return float('inf')
-                blocking_cars[self.board[i]] = 1
+                else:
+                    prev_block_down = 0
+                    prev_block_up = 0
+
+                    # Count blocking car if ambulance passed and car is present
+                    if prev_vehicle != car_letter:
+                        blocking_cars += 1
+
+                    # Check orientation of car and only add blocking if vertically oriented
+                    if self.car_dict[car_letter][3] == 'v':
+                        # Search vertically for blocking cars 
+                        prev_vehicle = car_letter
+                        j =  i
+                        while j - WIDTH > 0:
+                            j -= WIDTH
+                            up_car = self.board[j]
+                            if up_car != prev_vehicle:
+                                if up_car != '.':
+                                    prev_block_up += 1
+                                prev_vehicle = up_car
+                        
+                        # if prev_vehicle == car_letter:
+                        #     prev_block_up = float('inf')
+
+                        prev_vehicle = car_letter
+                        j =  i
+                        while j + WIDTH < WIDTH*HEIGHT:
+                            j += WIDTH
+                            down_car = self.board[j]
+                            if down_car != prev_vehicle:
+                                if down_car != '.':
+                                    prev_block_down += 1
+                                prev_vehicle = down_car
+                        
+                        # if prev_vehicle == car_letter:
+                        #     prev_block_down = float('inf')
+
+                        blocking_cars += min(prev_block_up, prev_block_down)
+                        prev_vehicle = car_letter
         
-        return len(blocking_cars)
+        # for i in range(0, 31, 6):
+        #     print(self.board[i:i+6])
+        # print(blocking_cars)
+        return blocking_cars
