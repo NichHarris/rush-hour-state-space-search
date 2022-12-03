@@ -16,7 +16,7 @@ options:
 >The directory does not need to be referenced when running the script, just the file name
 
 The options ``` -a, --analysis``` is used to run the program in analysis mode
-This will create an analysis output file where the format is:
+This will create an analysis output file, under `/output/analysis.txt` where the format is:
 ```Puzzle_Number	 Algorithm	 Heuristic	 Solution_Length	 Search_Length	 Runtime```
 
 Run to generate analysis file
